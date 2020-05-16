@@ -1,0 +1,7 @@
+{
+    "base_path": "",
+    "filename_prefix": "",
+    "start_episode": 1,
+    "get_episodes": 2,
+    "save_in": "/"
+}
