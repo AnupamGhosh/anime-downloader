@@ -1,9 +1,8 @@
 # https://9anime.to/ajax/film/servers/yzn0 last part yzn0 can be found in the anime page url, eg. for fairy-tail nqwm
 # class server and data id = 35
 # li > a.active store data-id
-# @TODO
-# 1. have _ & ts in all ajax request
-# 2. save cookie from BASE_URL and menu-bar 
+# analyze every params carefully when editing
+# _ param is specific to urls and remains same for an anime page
 
 from HTMLParser import HTMLParser
 import logging
@@ -157,7 +156,6 @@ class Request9anime(Request):
 
   def __init__(self, base_path):
     super(Request9anime, self).__init__({
-      # 'authority': '9anime.to',
       'referer': '%s%s' % (Request9anime.DOMAIN, base_path),
     })
     self.cookies = [
