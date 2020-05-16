@@ -226,11 +226,9 @@ class Downloader(object):
     mcloud_headers = {
       'referer': '%s%s' % (Request9anime.DOMAIN, self.base_path)
     }
-    logging.debug('mcloud req headers=%s', Request(mcloud_headers).headers)
     mcloud_js_val = Request(mcloud_headers).get('https://mcloud2.to/key')
     mcloud_regex = re.search(r"mcloudKey=['\"](\w+)['\"]", mcloud_js_val)
     mcloudKey = mcloud_regex.group(1)
-    logging.debug('mcloud=%s', mcloudKey)
     return mcloudKey
 
   def download_videos(self, parser):
@@ -240,13 +238,13 @@ class Downloader(object):
     anime_ep_ids = parser.get_ep_ids()[start: start + get_episodes]
     source_info_path = '/ajax/episode/info'
     mcloud = self.get_mcloudKey()
-    logging.debug('header:\n%s', self.request.headers)
+    logging.debug('headers:\n%s', self.request.headers)
     for i in xrange(get_episodes):
       logging.debug("Episode %s data-id=%s", start + i + 1, anime_ep_ids[i])
       current_ep = start + i + 1
       # most sensitive code
       content = self.request.get(source_info_path, {'id': anime_ep_ids[i], 'server': SERVER, 'mcloud': mcloud, '_': 935})
-      logging.debug("source_info_url response:\n%s", content)
+      logging.info("source_info_url response:\n%s", content)
       source_html_url = json.loads(content)['target']
 
       logging.debug("Source html url: %s", source_html_url)
@@ -271,14 +269,13 @@ class Downloader(object):
 
   def download(self):
     self.store_cookies()
-    # logging.debug('9anime cookies:\n%s\n', '\n'.join(self.request.cookies))
     self.get_episodes_html()
     parser = self.parse_episode_html()
     self.download_videos(parser)
     os.remove(self.anime_html_filepath)
 
 
-logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.INFO)
 CUR_DIR = os.path.dirname(__file__)
 with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
   config = json.load(config_fp)
