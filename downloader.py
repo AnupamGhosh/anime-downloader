@@ -1,4 +1,5 @@
-# https://9anime.to/ajax/film/servers/yzn0 last part yzn0 can be found in the anime page url, eg. for fairy-tail nqwm
+# https://9anime.to/ajax/film/servers/yzn0 last part yzn0 can be found in the anime page url, 
+# eg. for fairy-tail nqwm
 # class server and data id = 35
 # li > a.active store data-id
 # analyze every params carefully when editing
@@ -139,7 +140,7 @@ class Downloader(object):
     servers_id = path_matched.group(1)
     episode_id = path_matched.group(2)
     episode_url = '/ajax/film/servers'
-    content = self.request.get(episode_url, {'id': servers_id, 'episode': episode_id, '_': 887})
+    content = self.request.get(episode_url, {'id': servers_id, 'episode': episode_id})
 
     try:
       html_episodes = json.loads(content)['html']
@@ -179,7 +180,7 @@ class Downloader(object):
       logging.debug("Episode %s data-id=%s", start + i + 1, anime_ep_ids[i])
       current_ep = start + i + 1
       # most sensitive code
-      content = self.request.get(source_info_path, {'id': anime_ep_ids[i], 'server': SERVER, 'mcloud': mcloud, '_': 935})
+      content = self.request.get(source_info_path, {'id': anime_ep_ids[i], 'server': SERVER, 'mcloud': mcloud})
       logging.info("source_info_url response:\n%s", content)
       source_html_url = json.loads(content)['target']
 
