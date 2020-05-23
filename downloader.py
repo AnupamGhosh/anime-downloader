@@ -1,4 +1,4 @@
-# https://9anime.to/ajax/film/servers/yzn0 last part yzn0 can be found in the anime page url, 
+# https://9anime.to/ajax/film/servers/yzn0 last part yzn0 can be found in the anime page url,
 # eg. for fairy-tail nqwm
 # class server and data id = 35
 # li > a.active store data-id
@@ -9,8 +9,6 @@
 
 from HTMLParser import HTMLParser
 import logging
-import time
-import random
 import json
 import os
 import re
@@ -155,7 +153,6 @@ class Downloader(object):
     parser = HTMLParser9anime()
     path = self.anime_html_filepath
     with open(path, 'r') as html_text:
-      html_text = open(path, 'r')
       parser.feed(html_text.read())
     return parser
 
@@ -163,7 +160,7 @@ class Downloader(object):
     mcloud_headers = {
       'referer': '%s%s' % (Request9anime.DOMAIN, self.base_path)
     }
-    mcloud_js_val = Request(mcloud_headers).get('https://mcloud2.to/key')
+    mcloud_js_val = Request(mcloud_headers).get('https://mcloud.to/key')
     mcloud_regex = re.search(r"mcloudKey=['\"](\w+)['\"]", mcloud_js_val)
     mcloudKey = mcloud_regex.group(1)
     return mcloudKey
@@ -180,12 +177,14 @@ class Downloader(object):
       logging.debug("Episode %s data-id=%s", start + i + 1, anime_ep_ids[i])
       current_ep = start + i + 1
       # most sensitive code
-      content = self.request.get(source_info_path, {'id': anime_ep_ids[i], 'server': SERVER, 'mcloud': mcloud})
+      content = self.request.get(source_info_path, {
+          'id': anime_ep_ids[i], 'server': SERVER, 'mcloud': mcloud})
       logging.info("source_info_url response:\n%s", content)
       source_html_url = json.loads(content)['target']
 
       logging.debug("Source html url: %s", source_html_url)
-      source_html_path = os.path.join(CUR_DIR, '%s-source-ep%s.html' % (self.filename_prefix, current_ep))
+      source_html_path = os.path.join(CUR_DIR, '%s-source-ep%s.html' % (
+          self.filename_prefix, current_ep))
       source_html = Request().get(source_html_url)
       with open(source_html_path, 'w') as source_html_file:
         source_html_file.write('<!-- %s -->\n' % source_html_url)
@@ -199,8 +198,8 @@ class Downloader(object):
       )
       logging.debug("Download link: %s", download_link)
       save_as = os.path.join(self.save_dir, '%s%s.mp4' % (self.filename_prefix, current_ep))
-      returncode = os.system('wget --no-check-certificate %s -O %s' % (download_link, save_as)) and os.system(
-          'curl -k %s -o %s' % (download_link, save_as))
+      returncode = os.system('wget --no-check-certificate %s -O %s' % (
+          download_link, save_as)) and os.system('curl -k %s -o %s' % (download_link, save_as))
       if not returncode:
         os.remove(source_html_path)
 
