@@ -2,10 +2,7 @@
 # eg. for fairy-tail nqwm
 # class server and data id = 35
 # li > a.active store data-id
-# analyze every params carefully when editing
-# _ param is specific to urls and remains same for an anime page
-# Currently the _ params are pinned to fairy tail dub
-# @TODO need to find a way to automatically fetch _ from all.js
+# analyze every params carefully when editing API calls
 
 from HTMLParser import HTMLParser
 import logging
@@ -14,95 +11,26 @@ import os
 import re
 
 from make_request import Request, Request9anime
+from querySelector import GetElements, SearchNodeParser
 
-SERVER = 35 # mp4upload
+class EpisodeDataId(GetElements):
+  def __init__(self, html, server_id):
+    selector = [
+      {'tag': 'div', 'class': ['server'], 'attr': {'data-id': str(server_id)}},
+      {'tag': 'ul', 'class': ['episodes']},
+      {'tag': 'a'}
+    ]
+    self.episode_ids = []
+    super(EpisodeDataId, self).__init__(selector)
+    parser = SearchNodeParser(self)
+    parser.feed(html)
 
-class HTMLParser9anime(HTMLParser):
-  def __init__(self):
-    HTMLParser.__init__(self)
-    self.state_mc = EpisodeInfoMachine()
+  def matched_element(self, attr):
+    self.episode_ids.append(attr['data-id'])
+    assert int(attr['data-base']) == len(self.episode_ids)
 
-  def handle_starttag(self, tag, attrs):
-    self.state_mc.start_tag(tag, attrs)
-
-  def handle_endtag(self, tag):
-    self.state_mc.end_tag(tag)
-
-  def get_ep_ids(self):
-    return self.state_mc.ep_infos
-
-  @staticmethod
-  def attrs2dict(attrs):
-    return {name: value for name, value in attrs}
-
-
-class EpisodeInfoMachine:
-  def __init__(self):
-    self.ep_infos = []
-    self.SERVER = str(SERVER)
-    self.state_server = StateServer(self)
-    self.state_li = StateLi(self)
-    self.state_start = StateStart(self)
-    self.state_ul = StateUl(self)
-
-    self.state = self.state_start
-
-  def start_tag(self, tag, attrs):
-    self.state = self.state.next_state(tag, attrs)
-
-  def end_tag(self, tag):
-    self.state = self.state.next_state(tag, [], close=True)
-
-class StateStart(object):
-  def __init__(self, state_mc):
-    self.mc = state_mc
-
-  def next_state(self, tag, attrs, close=False):
-    attr = HTMLParser9anime.attrs2dict(attrs)
-    div_classes = attr.get('class', '').split(' ')
-    data_id = attr.get('data-id')
-
-    if 'server' in div_classes and data_id == self.mc.SERVER:
-      return self.mc.state_server
-    return self
-
-class StateServer(object):
-  def __init__(self, state_mc):
-    self.mc = state_mc
-
-  def next_state(self, tag, attrs, close=False):
-    attr = HTMLParser9anime.attrs2dict(attrs)
-    ul_classes = attr.get('class', '').split(' ')
-
-    if tag == 'ul' and 'episodes' in ul_classes and 'range' in ul_classes:
-      return self.mc.state_ul
-    return self
-
-class StateUl(object):
-  def __init__(self, state_mc):
-    self.mc = state_mc
-
-  def next_state(self, tag, attrs, close=False):
-    if tag == 'li' and not close:
-      return self.mc.state_li
-    if tag == 'ul' and close:
-      return self.mc.state_server
-    return self
-
-class StateLi(object):
-  def __init__(self, state_mc):
-    self.mc = state_mc
-
-  def next_state(self, tag, attrs, close=False):
-    attr = HTMLParser9anime.attrs2dict(attrs)
-
-    if tag == 'li' and close:
-      return self.mc.state_ul
-        
-    if tag == 'a' and not close:
-      self.mc.ep_infos.append(attr['data-id'])
-      assert int(attr['data-base']) == len(self.mc.ep_infos)
-    return self
+  def get_episode_ids(self):
+    return self.episode_ids
 
 class Downloader(object):
 
@@ -149,12 +77,12 @@ class Downloader(object):
       logging.debug("content:\n%s", content)
       raise e
 
-  def parse_episode_html(self):
-    parser = HTMLParser9anime()
+  def get_episode_ids(self):
     path = self.anime_html_filepath
-    with open(path, 'r') as html_text:
-      parser.feed(html_text.read())
-    return parser
+    with open(path, 'r') as fp:
+      html = fp.read()
+    parser = EpisodeDataId(html, SERVER)
+    return parser.get_episode_ids()
 
   def get_mcloudKey(self):
     mcloud_headers = {
@@ -165,11 +93,11 @@ class Downloader(object):
     mcloudKey = mcloud_regex.group(1)
     return mcloudKey
 
-  def download_videos(self, parser):
+  def download_videos(self, episode_ids):
     # get video source html page
     start = self.start_episode
     get_episodes = self.get_episodes
-    anime_ep_ids = parser.get_ep_ids()[start: start + get_episodes]
+    anime_ep_ids = episode_ids[start: start + get_episodes]
     source_info_path = '/ajax/episode/info'
     mcloud = self.get_mcloudKey()
     logging.debug('headers:\n%s', self.request.headers)
@@ -206,13 +134,14 @@ class Downloader(object):
   def download(self):
     self.store_cookies()
     self.get_episodes_html()
-    parser = self.parse_episode_html()
-    self.download_videos(parser)
+    episode_ids = self.get_episode_ids()
+    self.download_videos(episode_ids)
     os.remove(self.anime_html_filepath)
 
 
 logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.INFO)
 CUR_DIR = os.path.dirname(__file__)
+SERVER = 35
 with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
   config = json.load(config_fp)
 BASE_PATH = config['base_path']
