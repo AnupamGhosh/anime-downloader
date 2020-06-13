@@ -1,8 +1,8 @@
-import httplib
 import urllib
 import re
 import time
 import logging
+from http.client import HTTPSConnection
 
 class Request(object):
   def __init__(self, headers=None):
@@ -33,9 +33,9 @@ class Request(object):
       temp_params = re.findall(r"([^=]+)=([^&]+)&", temp_params + '&')
       params.update({key: val for key, val in temp_params})
     if len(params):
-      path += '?' + urllib.urlencode(params)
+      path += '?' + urllib.parse.urlencode(params)
 
-    con = httplib.HTTPSConnection(domain)
+    con = HTTPSConnection(domain)
     logging.debug("Requesting url: https://%s%s", domain, path)
     headers = self.headers.copy()
     headers['cookie'] = '; '.join(self.cookies)
@@ -86,7 +86,7 @@ class Request9anime(Request):
   @staticmethod
   def product_of_chars(key, val):
     product = 0
-    for i in xrange(max(len(key), len(val))):
+    for i in range(max(len(key), len(val))):
       product *= ord(key[i]) if i < len(key) else i + 5
       product *= ord(val[i]) if i < len(val) else i + 5
     return hex(product)[2:]
@@ -94,6 +94,6 @@ class Request9anime(Request):
   @staticmethod
   def sum_of_chars(string):
     s = 0
-    for i in xrange(len(string)):
+    for i in range(len(string)):
       s += ord(string[i]) + i
     return s

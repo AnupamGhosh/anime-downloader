@@ -4,7 +4,6 @@
 # li > a.active store data-id
 # analyze every params carefully when editing API calls
 
-from HTMLParser import HTMLParser
 import logging
 import json
 import os
@@ -26,8 +25,12 @@ class EpisodeDataId(GetElements):
     parser.feed(html)
 
   def matched_element(self, attr):
-    self.episode_ids.append(attr['data-id'])
-    assert int(attr['data-base']) == len(self.episode_ids)
+    ep_no = int(attr['data-base'])
+    if ep_no <= len(self.episode_ids):
+      self.episode_ids[ep_no - 1] = attr['data-id']
+    else:
+      self.episode_ids.append(attr['data-id'])
+    assert ep_no == len(self.episode_ids)
 
   def get_episode_ids(self):
     return self.episode_ids
@@ -101,7 +104,7 @@ class Downloader(object):
     source_info_path = '/ajax/episode/info'
     mcloud = self.get_mcloudKey()
     logging.debug('headers:\n%s', self.request.headers)
-    for i in xrange(get_episodes):
+    for i in range(get_episodes):
       logging.debug("Episode %s data-id=%s", start + i + 1, anime_ep_ids[i])
       current_ep = start + i + 1
       # most sensitive code

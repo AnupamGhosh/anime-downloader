@@ -1,5 +1,5 @@
 import logging
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 class GetElements(object):
   '''
@@ -11,13 +11,13 @@ class GetElements(object):
   def __init__(self, selector):
     rows = 1000
     self.N = len(selector)
-    self.lcs = [[0 for _ in xrange(self.N + 1)] for _ in xrange(rows)]
+    self.lcs = [[0 for _ in range(self.N + 1)] for _ in range(rows)]
     self.nodes = Search_Node.get_nodes(selector)
     self.row = 0
 
   def add_node(self, tag, attr):
     self.row += 1
-    for c in xrange(1, self.N + 1):
+    for c in range(1, self.N + 1):
       if self.nodes[c - 1].match(tag, attr):
         max_matched = self.lcs[self.row - 1][c - 1] + 1
         self.lcs[self.row][c] = max_matched
