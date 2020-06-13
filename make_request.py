@@ -41,7 +41,7 @@ class Request(object):
     headers['cookie'] = '; '.join(self.cookies)
     con.request('GET', path, None, headers)
     res = con.getresponse()
-    self._res_text = res.read()
+    self._res_text = res.read().decode('utf-8')
     con.close()
     return res
 

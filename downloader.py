@@ -11,9 +11,10 @@ import re
 
 from make_request import Request, Request9anime
 from querySelector import GetElements, SearchNodeParser
+from typing import List, Dict
 
 class EpisodeDataId(GetElements):
-  def __init__(self, html, server_id):
+  def __init__(self, html: str, server_id: str):
     selector = [
       {'tag': 'div', 'class': ['server'], 'attr': {'data-id': str(server_id)}},
       {'tag': 'ul', 'class': ['episodes']},
@@ -24,7 +25,7 @@ class EpisodeDataId(GetElements):
     parser = SearchNodeParser(self)
     parser.feed(html)
 
-  def matched_element(self, attr):
+  def matched_element(self, attr: Dict[str, str]):
     ep_no = int(attr['data-base'])
     if ep_no <= len(self.episode_ids):
       self.episode_ids[ep_no - 1] = attr['data-id']
@@ -32,7 +33,7 @@ class EpisodeDataId(GetElements):
       self.episode_ids.append(attr['data-id'])
     assert ep_no == len(self.episode_ids)
 
-  def get_episode_ids(self):
+  def get_episode_ids(self) -> List[str]:
     return self.episode_ids
 
 class Downloader(object):
