@@ -26,8 +26,12 @@ class EpisodeDataId(GetElements):
     parser.feed(html)
 
   def matched_element(self, attr):
-    self.episode_ids.append(attr['data-id'])
-    assert int(attr['data-base']) == len(self.episode_ids)
+    ep_no = int(attr['data-base'])
+    if ep_no <= len(self.episode_ids):
+      self.episode_ids[ep_no - 1] = attr['data-id']
+    else:
+      self.episode_ids.append(attr['data-id'])
+    assert ep_no == len(self.episode_ids)
 
   def get_episode_ids(self):
     return self.episode_ids
