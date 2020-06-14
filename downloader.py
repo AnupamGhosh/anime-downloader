@@ -13,30 +13,26 @@ from make_request import Request, Request9anime
 from querySelector import GetElements, SearchNodeParser
 from typing import List, Dict
 
-class EpisodeDataId(GetElements):
+class EpisodeDataId():
   def __init__(self, html: str, server_id: str):
     selector = [
       {'tag': 'div', 'class': ['server'], 'attr': {'data-id': str(server_id)}},
       {'tag': 'ul', 'class': ['episodes']},
       {'tag': 'a'}
     ]
-    self.episode_ids = []
-    super(EpisodeDataId, self).__init__(selector)
-    parser = SearchNodeParser(self)
+    self.query = GetElements(selector)
+    parser = SearchNodeParser(self.query)
     parser.feed(html)
 
-  def matched_element(self, attr: Dict[str, str]):
-    ep_no = int(attr['data-base'])
-    if ep_no <= len(self.episode_ids):
-      self.episode_ids[ep_no - 1] = attr['data-id']
-    else:
-      self.episode_ids.append(attr['data-id'])
-    assert ep_no == len(self.episode_ids)
-
   def get_episode_ids(self) -> List[str]:
-    return self.episode_ids
+    elements = self.query.matched_elements()
+    episode_ids = [''] * int(elements[-1]['data-base'])
+    for element in elements:
+      episode_no = int(element['data-base'])
+      episode_ids[episode_no - 1] = element['data-id']
+    return episode_ids
 
-class Downloader(object):
+class Downloader():
 
   def __init__(self, base_path, name_prefix, start, episode_count, save_dir):
     self.base_path = base_path
@@ -46,6 +42,7 @@ class Downloader(object):
     self.save_dir = save_dir
     self.request = Request9anime(base_path)
     self.anime_html_filepath = os.path.join(CUR_DIR, '%s-python.html' % self.filename_prefix)
+    self.subscribers = []
 
   def store_cookies(self):
     paths = [self.base_path, '/user/ajax/menu-bar']
@@ -63,6 +60,13 @@ class Downloader(object):
       key, val = cookie_str.split(';', 1)[0].strip().split('=', 1)
       cookies[key] = val
     return cookies
+
+  def add_subscriber(self, subscriber):
+    self.subscribers.append(subscriber)
+
+  def notify_downlaod(self, path):
+    for subscriber in self.subscribers:
+      subscriber.notify(path)
 
 
   def get_episodes_html(self):
@@ -134,6 +138,7 @@ class Downloader(object):
           download_link, save_as)) and os.system('curl -k %s -o %s' % (download_link, save_as))
       if not returncode:
         os.remove(source_html_path)
+        self.notify_downlaod(save_as)
 
   def download(self):
     self.store_cookies()
