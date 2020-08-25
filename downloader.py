@@ -148,7 +148,7 @@ class Downloader():
     os.remove(self.anime_html_filepath)
 
 
-logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
 CUR_DIR = os.path.dirname(__file__)
 SERVER = 35
 with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:

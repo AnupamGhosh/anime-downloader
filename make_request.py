@@ -53,7 +53,7 @@ class Request(object):
     return self.make_request(url, params).getheaders()
 
 class Request9anime(Request):
-  DOMAIN = 'https://9anime.to'
+  DOMAIN = 'https://www10.9anime.to'
   _TOKEN = "f2dl6d4e"
   _STRING = "fuckyou"
 
@@ -71,7 +71,12 @@ class Request9anime(Request):
     url = '%s%s' % (Request9anime.DOMAIN, path)
     if 'ajax' in path:
       params['ts'] = int(time.time())
-      params['_'] = self.underscore_value(params)
+      if 'ajax/film/servers' in path:
+        params['_'] = '888'
+      elif 'ajax/episode/info' in path:
+        params['_'] = '936'
+      else:
+        params['_'] = self.underscore_value(params)
     return super(Request9anime, self).make_request(url, params)
 
   def underscore_value(self, params):
