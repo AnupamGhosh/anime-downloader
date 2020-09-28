@@ -138,7 +138,7 @@ class Downloader():
     content = self.request.get(episode_url, {'id': servers_id, 'episode': episode_id})
 
     try:
-      html_episodes = json.loads(content)['html']
+      html_episodes = content
       path = self.anime_html_filepath
       with open(path, 'w') as html_text:
         html_text.write(html_episodes)
@@ -209,7 +209,7 @@ class Downloader():
     os.remove(self.anime_html_filepath)
 
 
-logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.INFO)
 CUR_DIR = os.path.dirname(__file__)
 SERVER = 35
 with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
