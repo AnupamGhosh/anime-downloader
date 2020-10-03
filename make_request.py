@@ -25,7 +25,7 @@ class Request(object):
 
   def make_request(self, url, params):
     params = params or {}
-    reg_match = re.match(r"https:\/\/([^\/]*)([^?]*)(.*)", url)
+    reg_match = re.match(r"https:\/\/([^\/]*)([^?]*)\??(.*)", url)
     domain = reg_match.group(1)
     path = reg_match.group(2)
     temp_params = reg_match.group(3)
