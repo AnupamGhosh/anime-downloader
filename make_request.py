@@ -53,7 +53,7 @@ class Request(object):
     return self.make_request(url, params).getheaders()
 
 class Request9anime(Request):
-  DOMAIN = 'https://www12.9anime.to'
+  DOMAIN = 'https://9anime.app'
   _TOKEN = "f2dl6d4e"
   _STRING = "fuckyou"
 

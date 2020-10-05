@@ -108,7 +108,7 @@ class Downloader():
     self.subscribers = []
 
   def store_cookies(self):
-    paths = [self.base_path, '/user/ajax/menu-bar']
+    paths = [self.base_path]
     for path in paths:
       res_meta_data = self.request.res_headers(path)
       cookies = Downloader.get_cookies(res_meta_data)
