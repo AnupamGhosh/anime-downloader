@@ -28,21 +28,19 @@ class Downloader():
 class Mp4uploadDownloader(Downloader):
   def __init__(self, target, save_loc, source_html):
     super().__init__(target, save_loc, source_html)
-    self.SUBDOMAIN = 27
-    self.PORT = 56
-    self.VIDEO_DIR = 55
-    self.EXTENSION = 25
 
   def download(self):
     logging.debug("Source html url: %s", self.target)
     source_html = Request().get(self.target)
     self.store_source_html(source_html)
 
-    video_info_match = re.search(r'.*eval.*\'(.*)\'\.split.*', source_html, re.MULTILINE)
+    video_info_match = re.search(r'.*eval.*\'(.*)\'\.split.*', source_html)
     url_info = video_info_match.group(1).split('|')
-    download_link = 'https://{subdomain}.mp4upload.com:{port}/d/{video_dir}/video.{ext}'.format(
-      subdomain=url_info[self.SUBDOMAIN], port=url_info[self.PORT],
-      video_dir=url_info[self.VIDEO_DIR], ext=url_info[self.EXTENSION ]
+    url_regex = re.compile(r'(\w{1,2})://(\w{1,2})\.(\w{1,2})\.(\w{1,2}):(\w{1,2})/(\w{1,2})/(\w{1,2})/(\w{1,2})\.(\w{1,2})')
+    url_parts = [url_info[int(match, 36)] for match in url_regex.findall(source_html)[0]]
+    download_link = '{protocol}://{subdomain}.{SLD}.{TLD}:{port}/d/{dir}/{filename}.{ext}'.format(
+      protocol=url_parts[0], subdomain=url_parts[1], SLD=url_parts[2], TLD=url_parts[3], port=url_parts[4],
+      dir=url_parts[6], filename=url_parts[7], ext=url_parts[8]
     )
     return super().download(download_link)
 
@@ -64,9 +62,3 @@ class StreamtapeDownloader(Downloader):
       if header == 'X-Redirect':
         redirect_url = val
     return super().download(redirect_url)
-
-# CUR_DIR = os.path.dirname(__file__)
-# save_as = os.path.join(CUR_DIR, 'dummy.mp4')
-# StreamtapeDownloader('https://streamtape.net/e/8qmvLzvgqRIovjy/', save_as, None).download()
-
-# Mp4uploadDownloader('https://www.mp4upload.com/embed-wc6347pguqft.html', save_as, None).download()

@@ -170,14 +170,14 @@ class Downloader():
     get_episodes = self.get_episodes
     anime_ep_ids = episode_ids[start: start + get_episodes]
     source_info_path = '/ajax/anime/episode'
-    mcloud = self.get_mcloudKey()
+    # mcloud = self.get_mcloudKey()
     logging.debug('headers:\n%s', self.request.headers)
     for i in range(get_episodes):
       logging.debug("Episode %s data-id=%s", start + i + 1, anime_ep_ids[i])
       current_ep = start + i + 1
-      # most sensitive code
+      # sensitive code
       content = self.request.get(source_info_path, {
-          'id': anime_ep_ids[i], 'mcloud': mcloud})
+          'id': anime_ep_ids[i]})
       logging.info("source_info_url response:\n%s", content)
       source_html_url = VideoHtmlGenerator(json.loads(content)['url']).get()
 
@@ -185,8 +185,8 @@ class Downloader():
       source_html_path = os.path.join(CUR_DIR, '%s-source-ep%s.html' % (
           self.filename_prefix, current_ep))
       save_as = os.path.join(self.save_dir, '%s%s.mp4' % (self.filename_prefix, current_ep))
-      # returncode = Mp4uploadDownloader(source_html_url, save_as, source_html_path).download()
-      returncode = StreamtapeDownloader(source_html_url, save_as, source_html_path).download()
+      returncode = Mp4uploadDownloader(source_html_url, save_as, source_html_path).download()
+      # returncode = StreamtapeDownloader(source_html_url, save_as, source_html_path).download()
       if not returncode:
         os.remove(source_html_path)
         self.notify_downlaod(save_as)
@@ -201,7 +201,7 @@ class Downloader():
 
 logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.INFO)
 CUR_DIR = os.path.dirname(__file__)
-SERVER = 40
+SERVER = 35
 with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
   config = json.load(config_fp)
 BASE_PATH = config['base_path']
