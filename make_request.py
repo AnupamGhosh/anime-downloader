@@ -5,7 +5,7 @@ import logging
 from http.client import HTTPSConnection
 
 class Request(object):
-  USER_AGENT_BROWSER = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36'
+  USER_AGENT_BROWSER = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'
   
   def __init__(self, headers=None):
     headers = headers or {}
