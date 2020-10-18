@@ -12,7 +12,6 @@ import re
 from make_request import Request, Request9anime
 from querySelector import GetElements, SearchNodeParser
 from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
-from typing import List, Dict
 
 class EpisodeDataId():
   def __init__(self, html: str, server_id: str):
@@ -26,7 +25,7 @@ class EpisodeDataId():
     parser = SearchNodeParser(self.query)
     parser.feed(html)
 
-  def get_episode_ids(self) -> List[str]:
+  def get_episode_ids(self):
     elements = self.query.matched_elements()
     episode_ids = [''] * int(elements[-1]['data-base'])
     for element in elements:
@@ -136,7 +135,7 @@ class Downloader():
     path_matched = re.search(r".*\.(\w+)\/(\w+)", self.base_path)
     servers_id = path_matched.group(1)
     episode_id = path_matched.group(2)
-    episode_url = '/ajax/anime/servers'
+    episode_url = EPISODES_URL
     content = self.request.get(episode_url, {'id': servers_id, 'episode': episode_id})
 
     try:
@@ -155,22 +154,12 @@ class Downloader():
     parser = EpisodeDataId(html, SERVER)
     return parser.get_episode_ids()
 
-  def get_mcloudKey(self):
-    mcloud_headers = {
-      'referer': '%s%s' % (Request9anime.DOMAIN, self.base_path)
-    }
-    mcloud_js_val = Request(mcloud_headers).get('https://mcloud.to/key')
-    mcloud_regex = re.search(r"mcloudKey=['\"](\w+)['\"]", mcloud_js_val)
-    mcloudKey = mcloud_regex.group(1)
-    return mcloudKey
-
   def download_videos(self, episode_ids):
     # get video source html page
     start = self.start_episode
     get_episodes = self.get_episodes
     anime_ep_ids = episode_ids[start: start + get_episodes]
-    source_info_path = '/ajax/anime/episode'
-    # mcloud = self.get_mcloudKey()
+    source_info_path = EPISODE_INFO
     logging.debug('headers:\n%s', self.request.headers)
     for i in range(get_episodes):
       logging.debug("Episode %s data-id=%s", start + i + 1, anime_ep_ids[i])
@@ -205,6 +194,8 @@ with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
 BASE_PATH = config['base_path']
 download_from = Mp4uploadDownloader()
 SERVER = download_from.server_id
+EPISODES_URL = '/ajax/anime/servers'
+EPISODE_INFO = '/ajax/anime/episode'
 Downloader(
     BASE_PATH, config['filename_prefix'], config['start_episode'], config['get_episodes'],
     str(config['save_in']).replace(' ', '\\ '), download_from

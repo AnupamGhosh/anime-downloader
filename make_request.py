@@ -56,8 +56,6 @@ class Request(object):
 
 class Request9anime(Request):
   DOMAIN = 'https://9anime.app'
-  _TOKEN = "f2dl6d4e"
-  _STRING = "fuckyou"
 
   def __init__(self, base_path):
     super(Request9anime, self).__init__({
@@ -71,36 +69,4 @@ class Request9anime(Request):
   def make_request(self, path, params):
     params = params or {}
     url = '%s%s' % (Request9anime.DOMAIN, path)
-    # if 'ajax' in path:
-    #   params['ts'] = int(time.time())
-    #   if 'ajax/film/servers' in path:
-    #     params['_'] = '888'
-    #   elif 'ajax/episode/info' in path:
-    #     params['_'] = '936'
-    #   else:
-    #     params['_'] = self.underscore_value(params)
     return super(Request9anime, self).make_request(url, params)
-
-  def underscore_value(self, params):
-    dic = params.copy()
-    dic['_'] = Request9anime._STRING
-    underscore = Request9anime.sum_of_chars(Request9anime._TOKEN)
-    for key in dic:
-      underscore += Request9anime.sum_of_chars(Request9anime.product_of_chars(
-          Request9anime._TOKEN + key, str(dic[key])))
-    return underscore
-
-  @staticmethod
-  def product_of_chars(key, val):
-    product = 0
-    for i in range(max(len(key), len(val))):
-      product *= ord(key[i]) if i < len(key) else i + 5
-      product *= ord(val[i]) if i < len(val) else i + 5
-    return hex(product)[2:]
-
-  @staticmethod
-  def sum_of_chars(string):
-    s = 0
-    for i in range(len(string)):
-      s += ord(string[i]) + i
-    return s
