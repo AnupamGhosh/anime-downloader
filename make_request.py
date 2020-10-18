@@ -5,12 +5,14 @@ import logging
 from http.client import HTTPSConnection
 
 class Request(object):
+  USER_AGENT_BROWSER = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36'
+  
   def __init__(self, headers=None):
     headers = headers or {}
     self.headers = {
       'accept': 'application/json, text/javascript, */*; q=0.01',
       'x-requested-with': 'XMLHttpRequest',
-      'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.92 Safari/537.36',
+      'user-agent': Request.USER_AGENT_BROWSER,
       'sec-fetch-site': 'same-origin',
       'sec-fetch-mode': 'cors',
       'sec-fetch-dest': 'empty',
