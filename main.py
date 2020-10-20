@@ -67,7 +67,7 @@ class VideoHtmlGenerator():
       x += chr(255 & r)
       return x
     else:
-      raise ValueError('Case unkown')
+      return x
 
   def html_link(self, t, n):
     o = 256
@@ -192,7 +192,7 @@ CUR_DIR = os.path.dirname(__file__)
 with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
   config = json.load(config_fp)
 BASE_PATH = config['base_path']
-download_from = Mp4uploadDownloader()
+download_from = StreamtapeDownloader() # Mp4uploadDownloader()
 SERVER = download_from.server_id
 EPISODES_URL = '/ajax/anime/servers'
 EPISODE_INFO = '/ajax/anime/episode'

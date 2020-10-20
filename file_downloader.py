@@ -60,7 +60,7 @@ class StreamtapeDownloader(Downloader):
     self.server_id = 40
 
   def parse_link(self, source):
-    match = re.search(r'videolink[^>]+>([^<]+)', source, re.MULTILINE)
+    match = re.search(r'videolink[^=]+= "([^"]+)', source, re.MULTILINE)
     download_link = 'https:{address}'.format(address=match.group(1))
     res_headers = Request().res_headers(download_link)
     redirect_url = None
@@ -68,5 +68,7 @@ class StreamtapeDownloader(Downloader):
       if header == 'X-Redirect':
         redirect_url = val
     if redirect_url is None:
-      logging.info('StreamtapeDownloader: Redirect url is None for %s', download_link)
+      raise ValueError(f'StreamtapeDownloader: Redirect url is None for {download_link}')
+    elif redirect_url.endswith('streamtape_do_not_delete.mp4'):
+      raise ValueError(f'Download link: {download_link} incorrect! Check logic')
     return redirect_url
