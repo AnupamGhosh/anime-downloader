@@ -65,10 +65,10 @@ class StreamtapeDownloader(Downloader):
     res_headers = Request().res_headers(download_link)
     redirect_url = None
     for header, val in res_headers:
-      if header == 'X-Redirect':
+      if header.lower() == 'x-redirect':
         redirect_url = val
     if redirect_url is None:
       raise ValueError(f'StreamtapeDownloader: Redirect url is None for {download_link}')
     elif redirect_url.endswith('streamtape_do_not_delete.mp4'):
-      raise ValueError(f'Download link: {download_link} incorrect! Check logic')
+      raise ValueError(f'StreamtapeDownloader: Download link {download_link} incorrect!')
     return redirect_url
