@@ -7,6 +7,7 @@ class Downloader():
   def __init__(self):
     self.browser_req = f'User-Agent: {Request.USER_AGENT_BROWSER}'
     self.referer = f'Referer: {Request9anime.DOMAIN}'
+    self.source_req_header = {}
 
   def store_source_html(self, html, save_at, target):
     if not save_at:
@@ -18,9 +19,12 @@ class Downloader():
   def parse_link(self, source):
     raise NotImplementedError
 
+  def get_source_html(self, target):
+    return Request(self.source_req_header).get(target)
+
   def download(self, target, save_loc, source_html_path):
     logging.debug("Source html url: %s", target)
-    source_html = Request().get(target)
+    source_html = self.get_source_html(target)
     self.store_source_html(source_html, source_html_path, target)
     link = self.parse_link(source_html)
     return self.fetch(link, save_loc)
@@ -58,17 +62,49 @@ class StreamtapeDownloader(Downloader):
   def __init__(self):
     super().__init__()
     self.server_id = 40
+    self.source_req_header = {
+      'authority': 'streamtape.to',
+      'cache-control': 'max-age=0',
+      'upgrade-insecure-requests': '1',
+      'sec-fetch-site': 'none',
+      'sec-fetch-mode': 'navigate',
+      'sec-fetch-user': '?1',
+      'sec-fetch-dest': 'document',
+      'accept-language': 'en-GB,en;q=0.9',
+    }
 
   def parse_link(self, source):
-    match = re.search(r'videolink[^=]+= "([^"]+)', source, re.MULTILINE)
-    download_link = 'https:{address}'.format(address=match.group(1))
+    match = re.search(r"videolink.+innerHTML.+(['\"])(.+)(\1)", source)
+    address = match.group(2)
+    get_video = re.search(r'^.*(get_video.*)', address)
+    download_link = 'https://streamtape.to/{address}'.format(address=get_video.group(1))
     res_headers = Request().res_headers(download_link)
     redirect_url = None
     for header, val in res_headers:
-      if header.lower() == 'x-redirect':
+      if header.lower() in ['x-redirect', 'location']:
         redirect_url = val
     if redirect_url is None:
       raise ValueError(f'StreamtapeDownloader: Redirect url is None for {download_link}')
-    elif redirect_url.endswith('streamtape_do_not_delete.mp4'):
+    elif 'streamtape_do_not_delete' in redirect_url:
       raise ValueError(f'StreamtapeDownloader: Download link {download_link} incorrect!')
     return redirect_url
+
+
+if __name__ == "__main__":
+  logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
+
+  streamtape_link = 'https://streamtape.to/e/0VolVxpedjTbbaq/?site=9anime.app'
+  header = {
+    'authority': 'streamtape.to',
+    'cache-control': 'max-age=0',
+    'upgrade-insecure-requests': '1',
+    'sec-fetch-site': 'none',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-user': '?1',
+    'sec-fetch-dest': 'document',
+    'accept-language': 'en-GB,en;q=0.9',
+  }
+  req = Request(header)
+  source = req.get(streamtape_link)
+  downloader = StreamtapeDownloader()
+  print(downloader.parse_link(source))

@@ -11,7 +11,7 @@ class Request(object):
     headers = headers or {}
     self.headers = {
       'accept': 'application/json, text/javascript, */*; q=0.01',
-      'x-requested-with': 'XMLHttpRequest',
+      # 'x-requested-with': 'XMLHttpRequest',
       'user-agent': Request.USER_AGENT_BROWSER,
       'sec-fetch-site': 'same-origin',
       'sec-fetch-mode': 'cors',
@@ -40,7 +40,7 @@ class Request(object):
     con = HTTPSConnection(domain)
     logging.debug("Requesting url: https://%s%s", domain, path)
     headers = self.headers.copy()
-    headers['cookie'] = '; '.join(self.cookies)
+    # headers['cookie'] = '; '.join(self.cookies)
     con.request('GET', path, None, headers)
     res = con.getresponse()
     self._res_text = res.read().decode('utf-8')
