@@ -182,7 +182,7 @@ class Downloader():
 
   # temp funciton
   def episodes_json_to_html(self):
-    read_path = os.path.join(os.path.join(CUR_DIR, 'sample'), '%s-python.json' % self.filename_prefix)
+    read_path = os.path.join(os.path.join(CUR_DIR, 'sample', 'episodes'), '%s.json' % self.filename_prefix)
     with open(read_path, 'r') as fp:
       ep_json = json.loads(fp.read())
 
