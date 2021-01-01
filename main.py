@@ -179,9 +179,26 @@ class Downloader():
         os.remove(source_html_path)
         self.notify_downlaod(save_as)
 
+
+  # temp funciton
+  def episodes_json_to_html(self):
+    read_path = os.path.join(os.path.join(CUR_DIR, 'sample'), '%s-python.json' % self.filename_prefix)
+    with open(read_path, 'r') as fp:
+      ep_json = json.loads(fp.read())
+
+    logging.debug('ep_json=%s', ep_json)
+    html_episodes = ep_json['html']
+    path = self.anime_html_filepath
+    with open(path, 'w') as html_text:
+      html_text.write(html_episodes)
+
   def download(self):
     self.store_cookies()
-    self.get_episodes_html()
+    #  @FIXME need to mimic recaptcha_en.js to send token param to EPISODES_URL.
+    # devtools from chrome doesn't even return the correct result for EPISODES_URL. Use Firefox.
+    # self.get_episodes_html()
+    self.episodes_json_to_html()
+
     episode_ids = self.get_episode_ids()
     self.download_videos(episode_ids)
     os.remove(self.anime_html_filepath)
