@@ -9,6 +9,7 @@ import json
 import os
 import re
 
+from gcloud_upload_client import GdriveUploader
 from make_request import Request, Request9anime
 from querySelector import GetElements, SearchNodeParser
 from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
@@ -213,7 +214,15 @@ download_from = StreamtapeDownloader() # Mp4uploadDownloader()
 SERVER = download_from.server_id
 EPISODES_URL = '/ajax/anime/servers'
 EPISODE_INFO = '/ajax/anime/episode'
-Downloader(
+save_at = str(config['save_in']).replace(' ', '\\ ')
+downloader = Downloader(
     BASE_PATH, config['filename_prefix'], config['start_episode'], config['get_episodes'],
-    str(config['save_in']).replace(' ', '\\ '), download_from
-).download()
+    save_at, download_from
+)
+
+if config.get('upload_to'):
+  drive_id = str(config['upload_to'])
+  uploader = GdriveUploader(4242, drive_id)
+  downloader.add_subscriber(uploader)
+
+downloader.download()

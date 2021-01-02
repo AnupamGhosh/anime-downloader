@@ -27,7 +27,8 @@ class Downloader():
     source_html = self.get_source_html(target)
     self.store_source_html(source_html, source_html_path, target)
     link = self.parse_link(source_html)
-    return self.fetch(link, save_loc)
+    # return self.fetch(link, save_loc)
+    return 0
 
   def fetch(self, download_link, save_loc):
     logging.debug("Download link: %s", download_link)
