@@ -1,16 +1,18 @@
-import httplib
 import urllib
 import re
 import time
 import logging
+from http.client import HTTPSConnection
 
 class Request(object):
+  USER_AGENT_BROWSER = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'
+  
   def __init__(self, headers=None):
     headers = headers or {}
     self.headers = {
       'accept': 'application/json, text/javascript, */*; q=0.01',
-      'x-requested-with': 'XMLHttpRequest',
-      'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.92 Safari/537.36',
+      # 'x-requested-with': 'XMLHttpRequest',
+      'user-agent': Request.USER_AGENT_BROWSER,
       'sec-fetch-site': 'same-origin',
       'sec-fetch-mode': 'cors',
       'sec-fetch-dest': 'empty',
@@ -25,7 +27,7 @@ class Request(object):
 
   def make_request(self, url, params):
     params = params or {}
-    reg_match = re.match(r"https:\/\/([^\/]*)([^?]*)(.*)", url)
+    reg_match = re.match(r"https:\/\/([^\/]*)([^?]*)\??(.*)", url)
     domain = reg_match.group(1)
     path = reg_match.group(2)
     temp_params = reg_match.group(3)
@@ -33,15 +35,15 @@ class Request(object):
       temp_params = re.findall(r"([^=]+)=([^&]+)&", temp_params + '&')
       params.update({key: val for key, val in temp_params})
     if len(params):
-      path += '?' + urllib.urlencode(params)
+      path += '?' + urllib.parse.urlencode(params)
 
-    con = httplib.HTTPSConnection(domain)
+    con = HTTPSConnection(domain)
     logging.debug("Requesting url: https://%s%s", domain, path)
     headers = self.headers.copy()
-    headers['cookie'] = '; '.join(self.cookies)
+    # headers['cookie'] = '; '.join(self.cookies)
     con.request('GET', path, None, headers)
     res = con.getresponse()
-    self._res_text = res.read()
+    self._res_text = res.read().decode('utf-8')
     con.close()
     return res
 
@@ -53,9 +55,7 @@ class Request(object):
     return self.make_request(url, params).getheaders()
 
 class Request9anime(Request):
-  DOMAIN = 'https://9anime.to'
-  _TOKEN = "f2dl6d4e"
-  _STRING = "fuckyou"
+  DOMAIN = 'https://9anime.app'
 
   def __init__(self, base_path):
     super(Request9anime, self).__init__({
@@ -69,31 +69,4 @@ class Request9anime(Request):
   def make_request(self, path, params):
     params = params or {}
     url = '%s%s' % (Request9anime.DOMAIN, path)
-    if 'ajax' in path:
-      params['ts'] = int(time.time())
-      params['_'] = self.underscore_value(params)
     return super(Request9anime, self).make_request(url, params)
-
-  def underscore_value(self, params):
-    dic = params.copy()
-    dic['_'] = Request9anime._STRING
-    underscore = Request9anime.sum_of_chars(Request9anime._TOKEN)
-    for key in dic:
-      underscore += Request9anime.sum_of_chars(Request9anime.product_of_chars(
-          Request9anime._TOKEN + key, str(dic[key])))
-    return underscore
-
-  @staticmethod
-  def product_of_chars(key, val):
-    product = 0
-    for i in xrange(max(len(key), len(val))):
-      product *= ord(key[i]) if i < len(key) else i + 5
-      product *= ord(val[i]) if i < len(val) else i + 5
-    return hex(product)[2:]
-
-  @staticmethod
-  def sum_of_chars(string):
-    s = 0
-    for i in xrange(len(string)):
-      s += ord(string[i]) + i
-    return s
