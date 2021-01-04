@@ -73,11 +73,16 @@ class StreamtapeDownloader(Downloader):
       'accept-language': 'en-GB,en;q=0.9',
     }
 
+  # changes very frequently
+  def downloadlink_from_html(self, source):
+    match = re.search(r"v.{0,9}ink.+innerHTML[^\"']+([^;]+)", source)
+    address_str = match.group(1)
+    address = eval(address_str)
+    link = f'https:{address}'
+    return link
+
   def parse_link(self, source):
-    match = re.search(r"videolink.+innerHTML.+(['\"])(.+)(\1)", source)
-    address = match.group(2)
-    get_video = re.search(r'^.*(get_video.*)', address)
-    download_link = 'https://streamtape.to/{address}'.format(address=get_video.group(1))
+    download_link = self.downloadlink_from_html(source)
     res_headers = Request().res_headers(download_link)
     redirect_url = None
     for header, val in res_headers:
@@ -93,7 +98,7 @@ class StreamtapeDownloader(Downloader):
 if __name__ == "__main__":
   logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
 
-  streamtape_link = 'https://streamtape.to/e/0VolVxpedjTbbaq/?site=9anime.app'
+  streamtape_link = 'https://streamtape.com/e/AQ07A7Zeg1FXdLX/?site=9anime.app'
   header = {
     'authority': 'streamtape.to',
     'cache-control': 'max-age=0',
