@@ -162,13 +162,17 @@ class Downloader():
     source_info_path = EPISODE_INFO
     logging.debug('headers:\n%s', self.request.headers)
     for i in range(get_episodes):
-      logging.debug("Episode %s data-id=%s", start + i + 1, anime_ep_ids[i])
       current_ep = start + i + 1
+      logging.debug("Episode %s data-id=%s", current_ep, anime_ep_ids[i])
       # sensitive code
       content = self.request.get(source_info_path, {
           'id': anime_ep_ids[i]})
-      logging.info("source_info_url response:\n%s", content)
-      source_html_url = VideoHtmlGenerator(json.loads(content)['url']).get()
+      try:
+        source_html_url = VideoHtmlGenerator(json.loads(content)['url']).get()
+        logging.info(f'Downloading episode {current_ep}')
+      except Exception:
+        logging.exception(f'source_info_url response:\n{content}')
+        return
 
       
       source_html_path = os.path.join(CUR_DIR, '%s-source-ep%s.html' % (
