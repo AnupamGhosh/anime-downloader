@@ -43,7 +43,7 @@ class WgetCommand(DownloadCommand):
 
   def __str__(self):
     headers = ' '.join(map(lambda h: f"--header '{h}'", self.headers))
-    cmd = f'wget --no-check-certificate {self.url} {headers} -O {self.loc}'
+    cmd = f"wget --no-check-certificate {self.url} {headers} -O '{self.loc}'"
     return cmd
     
 class CurlCommand(DownloadCommand):
@@ -52,7 +52,7 @@ class CurlCommand(DownloadCommand):
 
   def __str__(self):
     headers = ' '.join(map(lambda h: f"-H '{h}'", self.headers))
-    cmd = f'curl -k {self.url} {headers} -o {self.loc}'
+    cmd = f"curl -k {self.url} {headers} -o '{self.loc}'"
     return cmd
 
 

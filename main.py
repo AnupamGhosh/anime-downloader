@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import re
+from pathlib import Path
 
 from download_command import DownloadMode
 from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
@@ -97,7 +98,7 @@ class VideoHtmlGenerator():
 
 class Downloader():
 
-  def __init__(self, base_path, name_prefix, start, episode_count, save_dir, downloader):
+  def __init__(self, base_path, name_prefix, start, episode_count, save_dir: Path, downloader):
     self.base_path = base_path
     self.filename_prefix = name_prefix
     self.start_episode = start - 1
@@ -220,7 +221,7 @@ download_from = StreamtapeDownloader() # Mp4uploadDownloader()
 SERVER = download_from.server_id
 EPISODES_URL = '/ajax/anime/servers'
 EPISODE_INFO = '/ajax/anime/episode'
-save_at = str(config['save_in']).replace(' ', '\\ ')
+save_at = Path(config['save_in'])
 downloader = Downloader(
     BASE_PATH, config['filename_prefix'], config['start_episode'], config['get_episodes'],
     save_at, download_from
