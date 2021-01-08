@@ -1,8 +1,8 @@
 import asyncio
-import logging
 import os
 from asyncio import StreamReader
 
+from logger import logging
 
 class DownloadCommand:
   def __init__(self, url: str, save_loc: str, headers: [str]) -> None:

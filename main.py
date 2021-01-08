@@ -5,7 +5,6 @@
 # analyze every params carefully when editing API calls
 
 import json
-import logging
 import os
 import re
 from pathlib import Path
@@ -13,6 +12,7 @@ from pathlib import Path
 from download_command import DownloadMode
 from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
 from gcloud_upload_client import GdriveUploader
+from logger import logging
 from make_request import Request, Request9anime
 from querySelector import GetElements, SearchNodeParser
 
@@ -193,8 +193,12 @@ class Downloader():
     with open(read_path, 'r') as fp:
       ep_json = json.loads(fp.read())
 
-    logging.debug('ep_json=%s', ep_json)
-    html_episodes = ep_json['html']
+    try:
+      html_episodes = ep_json['html']
+    except Exception as err:
+      logging.info('ep_json=%s', ep_json)
+      raise err
+
     path = self.anime_html_filepath
     with open(path, 'w') as html_text:
       html_text.write(html_episodes)
@@ -211,17 +215,17 @@ class Downloader():
     os.remove(self.anime_html_filepath)
 
 
-logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.INFO)
 CUR_DIR = os.path.dirname(__file__)
 with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
   config = json.load(config_fp)
 BASE_PATH = config['base_path']
-download_mode = DownloadMode.FOREGROUND
 download_from = StreamtapeDownloader() # Mp4uploadDownloader()
 SERVER = download_from.server_id
 EPISODES_URL = '/ajax/anime/servers'
 EPISODE_INFO = '/ajax/anime/episode'
 save_at = Path(config['save_in'])
+download_mode = DownloadMode.BACKGROUND if config.get('upload_to') else DownloadMode.FOREGROUND
+
 downloader = Downloader(
     BASE_PATH, config['filename_prefix'], config['start_episode'], config['get_episodes'],
     save_at, download_from

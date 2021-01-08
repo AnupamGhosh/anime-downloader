@@ -1,5 +1,6 @@
-import logging
 from html.parser import HTMLParser
+
+from logger import logging
 
 class GetElements(object):
   '''

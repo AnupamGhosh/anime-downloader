@@ -1,7 +1,8 @@
 import re
 import os
-import logging
+
 from download_command import WgetCommand, CurlCommand
+from logger import logging
 from make_request import Request, Request9anime
 
 class Downloader():
