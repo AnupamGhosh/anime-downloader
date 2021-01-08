@@ -4,14 +4,15 @@
 # li > a.active store data-id
 # analyze every params carefully when editing API calls
 
-import logging
 import json
+import logging
 import os
 import re
 
+from download_command import DownloadMode
+from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
 from make_request import Request, Request9anime
 from querySelector import GetElements, SearchNodeParser
-from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
 
 class EpisodeDataId():
   def __init__(self, html: str, server_id: str):
@@ -154,7 +155,7 @@ class Downloader():
     parser = EpisodeDataId(html, SERVER)
     return parser.get_episode_ids()
 
-  def download_videos(self, episode_ids):
+  def download_videos(self, episode_ids, mode):
     # get video source html page
     start = self.start_episode
     get_episodes = self.get_episodes
@@ -178,7 +179,7 @@ class Downloader():
       source_html_path = os.path.join(CUR_DIR, '%s-source-ep%s.html' % (
           self.filename_prefix, current_ep))
       save_as = os.path.join(self.save_dir, '%s%s.mp4' % (self.filename_prefix, current_ep))
-      returncode = self.downloader.download(source_html_url, save_as, source_html_path)
+      returncode = self.downloader.download(source_html_url, save_as, source_html_path, mode)
       if not returncode:
         os.remove(source_html_path)
         self.notify_downlaod(save_as)
@@ -196,7 +197,7 @@ class Downloader():
     with open(path, 'w') as html_text:
       html_text.write(html_episodes)
 
-  def download(self):
+  def download(self, mode):
     self.store_cookies()
     #  @FIXME need to mimic recaptcha_en.js to send token param to EPISODES_URL.
     # devtools from chrome doesn't even return the correct result for EPISODES_URL. Use Firefox.
@@ -204,7 +205,7 @@ class Downloader():
     self.episodes_json_to_html()
 
     episode_ids = self.get_episode_ids()
-    self.download_videos(episode_ids)
+    self.download_videos(episode_ids, mode)
     os.remove(self.anime_html_filepath)
 
 
@@ -213,6 +214,7 @@ CUR_DIR = os.path.dirname(__file__)
 with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
   config = json.load(config_fp)
 BASE_PATH = config['base_path']
+download_mode = DownloadMode.FOREGROUND
 download_from = StreamtapeDownloader() # Mp4uploadDownloader()
 SERVER = download_from.server_id
 EPISODES_URL = '/ajax/anime/servers'
@@ -220,4 +222,4 @@ EPISODE_INFO = '/ajax/anime/episode'
 Downloader(
     BASE_PATH, config['filename_prefix'], config['start_episode'], config['get_episodes'],
     str(config['save_in']).replace(' ', '\\ '), download_from
-).download()
+).download(download_mode)

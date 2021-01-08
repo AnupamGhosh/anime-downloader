@@ -5,6 +5,9 @@ from download_command import WgetCommand, CurlCommand
 from make_request import Request, Request9anime
 
 class Downloader():
+  BACKGROUND_DOWNLOAD = 0
+  FOREGROUND_DOWNLOAD = 1
+
   def __init__(self):
     self.browser_req = f'User-Agent: {Request.USER_AGENT_BROWSER}'
     self.referer = f'Referer: {Request9anime.DOMAIN}'
@@ -23,20 +26,20 @@ class Downloader():
   def get_source_html(self, target):
     return Request(self.source_req_header).get(target)
 
-  def download(self, target, save_loc, source_html_path):
+  def download(self, target, save_loc, source_html_path, mode):
     logging.debug("Source html url: %s", target)
     source_html = self.get_source_html(target)
     self.store_source_html(source_html, source_html_path, target)
     link = self.parse_link(source_html)
-    return self.fetch(link, save_loc)
+    return self.fetch(link, save_loc, mode)
 
-  def fetch(self, download_link, save_loc):
+  def fetch(self, download_link, save_loc, mode):
     logging.debug("Download link: %s", download_link)
     wget_command = WgetCommand(download_link, save_loc, [self.browser_req, self.referer])
     curl_command = CurlCommand(download_link, save_loc, [self.browser_req, self.referer])
-    returncode = wget_command.run()
+    returncode = wget_command.run(mode)
     if returncode > 0:
-      returncode = curl_command.run()
+      returncode = curl_command.run(mode)
     return returncode
 
 class Mp4uploadDownloader(Downloader):

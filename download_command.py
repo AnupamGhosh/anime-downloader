@@ -10,7 +10,7 @@ class DownloadCommand:
     self.loc = save_loc
     self.headers = headers
 
-  def run(self):
+  def run_foreground(self):
     returncode = os.system(str(self))
     return returncode
 
@@ -28,6 +28,14 @@ class DownloadCommand:
     
     await process.communicate()
     return process.returncode
+
+  def run(self, mode):
+    if mode == DownloadMode.FOREGROUND:
+      return self.run_foreground()
+    elif mode == DownloadMode.BACKGROUND:
+      return asyncio.run(self.run_background())
+    else:
+      raise ValueError("mode shoud be value in DownloadMode!")
 
 class WgetCommand(DownloadCommand):
   def __init__(self, url: str, save_loc: str, headers: [str]) -> None:
@@ -67,9 +75,12 @@ class BufferedReader:
       else:
         self.buffer.append(byte.decode("utf-8", 'ignore'))
 
+class DownloadMode:
+  FOREGROUND = 0
+  BACKGROUND = 1
 
 if __name__ == "__main__":
   logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
 
   wgetCommand = CurlCommand('https://assets.mixkit.co/videos/download/mixkit-sunlight-passing-through-the-leaves-of-a-tree-34371.mp4', 'temp.mp4', [])
-  wgetCommand.run()
+  wgetCommand.run(DownloadMode.BACKGROUND)
