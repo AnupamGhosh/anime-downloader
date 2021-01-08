@@ -1,6 +1,7 @@
 import re
 import os
 import logging
+from download_command import WgetCommand, CurlCommand
 from make_request import Request, Request9anime
 
 class Downloader():
@@ -31,13 +32,11 @@ class Downloader():
 
   def fetch(self, download_link, save_loc):
     logging.debug("Download link: %s", download_link)
-    returncode = os.system("wget --no-check-certificate {url} --header '{browser}' --header '{referer}' -O {save_loc}".format(
-      url=download_link, save_loc=save_loc, browser=self.browser_req, referer=self.referer)
-    )
+    wget_command = WgetCommand(download_link, save_loc, [self.browser_req, self.referer])
+    curl_command = CurlCommand(download_link, save_loc, [self.browser_req, self.referer])
+    returncode = wget_command.run()
     if returncode > 0:
-      return os.system("curl -k '{url}' -H '{browser}' -H '{referer}' -o {save_loc}".format(
-        url=download_link, save_loc=save_loc, browser=self.browser_req, referer=self.referer)
-      )
+      returncode = curl_command.run()
     return returncode
 
 class Mp4uploadDownloader(Downloader):
