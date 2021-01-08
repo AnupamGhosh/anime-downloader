@@ -15,12 +15,13 @@ class AsyncGdriveConnector:
     writer.write(json.dumps(payload).encode())
     await writer.drain()
 
-    data = await reader.read(100)
-    logging.debug(f'Received: {data.decode()!r}')
+    response = await reader.read(100)
+    logging.debug(f'Received: {response.decode()!r}')
 
     # Close the connection
     writer.close()
     await writer.wait_closed()
+    return response
 
 
 class GdriveUploader:
@@ -34,7 +35,8 @@ class GdriveUploader:
   def upload(self, path):
     payload = self.create_payload(path)
     logging.info('payload=%s', payload)
-    asyncio.create_task(self._uploader.connect(payload))
+    response = asyncio.run(self._uploader.connect(payload))
+    return response
 
   def create_payload(self, path: str) -> dict:
     return {
@@ -44,9 +46,11 @@ class GdriveUploader:
 
 
 def main():
+  logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
   drive_id = '14BzAsfL5ZOC8oH2pWgjOjilEapUWeDqH'
   uploader = GdriveUploader(4242, drive_id)
-  uploader.upload('/Users/anupamghosh/Movies/Anohana/ano.mp4')
+  response = uploader.upload('/Users/anupamghosh/Movies/Anohana/ano.mp4')
+  logging.debug(f'response={response}')
 
 if __name__ == "__main__":
     main()
