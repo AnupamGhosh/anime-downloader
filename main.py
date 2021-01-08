@@ -4,15 +4,16 @@
 # li > a.active store data-id
 # analyze every params carefully when editing API calls
 
-import logging
 import json
+import logging
 import os
 import re
 
+from download_command import DownloadMode
+from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
 from gcloud_upload_client import GdriveUploader
 from make_request import Request, Request9anime
 from querySelector import GetElements, SearchNodeParser
-from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
 
 class EpisodeDataId():
   def __init__(self, html: str, server_id: str):
@@ -155,7 +156,7 @@ class Downloader():
     parser = EpisodeDataId(html, SERVER)
     return parser.get_episode_ids()
 
-  def download_videos(self, episode_ids):
+  def download_videos(self, episode_ids, mode):
     # get video source html page
     start = self.start_episode
     get_episodes = self.get_episodes
@@ -163,19 +164,23 @@ class Downloader():
     source_info_path = EPISODE_INFO
     logging.debug('headers:\n%s', self.request.headers)
     for i in range(get_episodes):
-      logging.debug("Episode %s data-id=%s", start + i + 1, anime_ep_ids[i])
       current_ep = start + i + 1
+      logging.debug("Episode %s data-id=%s", current_ep, anime_ep_ids[i])
       # sensitive code
       content = self.request.get(source_info_path, {
           'id': anime_ep_ids[i]})
-      logging.info("source_info_url response:\n%s", content)
-      source_html_url = VideoHtmlGenerator(json.loads(content)['url']).get()
+      try:
+        source_html_url = VideoHtmlGenerator(json.loads(content)['url']).get()
+        logging.info(f'Downloading episode {current_ep}')
+      except Exception:
+        logging.exception(f'source_info_url response:\n{content}')
+        return
 
       
       source_html_path = os.path.join(CUR_DIR, '%s-source-ep%s.html' % (
           self.filename_prefix, current_ep))
       save_as = os.path.join(self.save_dir, '%s%s.mp4' % (self.filename_prefix, current_ep))
-      returncode = self.downloader.download(source_html_url, save_as, source_html_path)
+      returncode = self.downloader.download(source_html_url, save_as, source_html_path, mode)
       if not returncode:
         os.remove(source_html_path)
         self.notify_downlaod(save_as)
@@ -193,7 +198,7 @@ class Downloader():
     with open(path, 'w') as html_text:
       html_text.write(html_episodes)
 
-  def download(self):
+  def download(self, mode):
     self.store_cookies()
     #  @FIXME need to mimic recaptcha_en.js to send token param to EPISODES_URL.
     # devtools from chrome doesn't even return the correct result for EPISODES_URL. Use Firefox.
@@ -201,7 +206,7 @@ class Downloader():
     self.episodes_json_to_html()
 
     episode_ids = self.get_episode_ids()
-    self.download_videos(episode_ids)
+    self.download_videos(episode_ids, mode)
     os.remove(self.anime_html_filepath)
 
 
@@ -210,6 +215,7 @@ CUR_DIR = os.path.dirname(__file__)
 with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
   config = json.load(config_fp)
 BASE_PATH = config['base_path']
+download_mode = DownloadMode.FOREGROUND
 download_from = StreamtapeDownloader() # Mp4uploadDownloader()
 SERVER = download_from.server_id
 EPISODES_URL = '/ajax/anime/servers'
@@ -225,4 +231,4 @@ if config.get('upload_to'):
   uploader = GdriveUploader(4242, drive_id)
   downloader.add_subscriber(uploader)
 
-downloader.download()
+downloader.download(download_mode)

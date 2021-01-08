@@ -1,9 +1,13 @@
 import re
 import os
 import logging
+from download_command import WgetCommand, CurlCommand
 from make_request import Request, Request9anime
 
 class Downloader():
+  BACKGROUND_DOWNLOAD = 0
+  FOREGROUND_DOWNLOAD = 1
+
   def __init__(self):
     self.browser_req = f'User-Agent: {Request.USER_AGENT_BROWSER}'
     self.referer = f'Referer: {Request9anime.DOMAIN}'
@@ -22,23 +26,20 @@ class Downloader():
   def get_source_html(self, target):
     return Request(self.source_req_header).get(target)
 
-  def download(self, target, save_loc, source_html_path):
+  def download(self, target, save_loc, source_html_path, mode):
     logging.debug("Source html url: %s", target)
     source_html = self.get_source_html(target)
     self.store_source_html(source_html, source_html_path, target)
     link = self.parse_link(source_html)
-    # return self.fetch(link, save_loc)
-    return 0
+    return self.fetch(link, save_loc, mode)
 
-  def fetch(self, download_link, save_loc):
+  def fetch(self, download_link, save_loc, mode):
     logging.debug("Download link: %s", download_link)
-    returncode = os.system("wget --no-check-certificate {url} --header '{browser}' --header '{referer}' -O {save_loc}".format(
-      url=download_link, save_loc=save_loc, browser=self.browser_req, referer=self.referer)
-    )
+    wget_command = WgetCommand(download_link, save_loc, [self.browser_req, self.referer])
+    curl_command = CurlCommand(download_link, save_loc, [self.browser_req, self.referer])
+    returncode = wget_command.run(mode)
     if returncode > 0:
-      return os.system("curl -k '{url}' -H '{browser}' -H '{referer}' -o {save_loc}".format(
-        url=download_link, save_loc=save_loc, browser=self.browser_req, referer=self.referer)
-      )
+      returncode = curl_command.run(mode)
     return returncode
 
 class Mp4uploadDownloader(Downloader):
@@ -74,11 +75,16 @@ class StreamtapeDownloader(Downloader):
       'accept-language': 'en-GB,en;q=0.9',
     }
 
+  # changes very frequently
+  def downloadlink_from_html(self, source):
+    match = re.search(r"v.{0,9}ink.+innerHTML[^\"']+([^;]+)", source)
+    address_str = match.group(1)
+    address = eval(address_str)
+    link = f'https:{address}'
+    return link
+
   def parse_link(self, source):
-    match = re.search(r"videolink.+innerHTML.+(['\"])(.+)(\1)", source)
-    address = match.group(2)
-    get_video = re.search(r'^.*(get_video.*)', address)
-    download_link = 'https://streamtape.to/{address}'.format(address=get_video.group(1))
+    download_link = self.downloadlink_from_html(source)
     res_headers = Request().res_headers(download_link)
     redirect_url = None
     for header, val in res_headers:
@@ -94,7 +100,7 @@ class StreamtapeDownloader(Downloader):
 if __name__ == "__main__":
   logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
 
-  streamtape_link = 'https://streamtape.to/e/0VolVxpedjTbbaq/?site=9anime.app'
+  streamtape_link = 'https://streamtape.com/e/AQ07A7Zeg1FXdLX/?site=9anime.app'
   header = {
     'authority': 'streamtape.to',
     'cache-control': 'max-age=0',
