@@ -7,6 +7,7 @@
 import json
 import os
 import re
+import sys
 from pathlib import Path
 
 from download_command import DownloadMode
@@ -224,7 +225,7 @@ SERVER = download_from.server_id
 EPISODES_URL = '/ajax/anime/servers'
 EPISODE_INFO = '/ajax/anime/episode'
 save_at = Path(config['save_in'])
-download_mode = DownloadMode.BACKGROUND if config.get('upload_to') else DownloadMode.FOREGROUND
+download_mode = DownloadMode.FOREGROUND if sys.stdout.isatty() else DownloadMode.BACKGROUND
 
 downloader = Downloader(
     BASE_PATH, config['filename_prefix'], config['start_episode'], config['get_episodes'],
