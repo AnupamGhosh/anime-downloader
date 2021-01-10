@@ -15,226 +15,32 @@ from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
 from gcloud_upload_client import GdriveUploader
 from logger import logging
 from make_request import Request, Request9anime
+from nine_anime import NineAnime, VideoURLDecoder
 from querySelector import GetElements, SearchNodeParser
 
-class EpisodeDataId():
-  def __init__(self, html: str, server_id: str):
-    selector = [
-      {'tag': 'div', 'class': ['body']},
-      {'tag': 'ul', 'class': ['episodes']},
-      {'tag': 'a'}
-    ]
-    self.server_id = str(server_id)
-    self.query = GetElements(selector)
-    parser = SearchNodeParser(self.query)
-    parser.feed(html)
 
-  def get_episode_ids(self):
-    elements = self.query.matched_elements()
-    episode_ids = [''] * int(elements[-1]['data-base'])
-    for element in elements:
-      episode_no = int(element['data-base'])
-      episode_ids[episode_no - 1] = json.loads(element['data-sources'])[self.server_id]
-    return episode_ids
-
-class VideoHtmlGenerator():
-  def __init__(self, hash):
-    self.hash = hash
-
-  def generate_part2(self, t):
-    t = re.sub(r'==?$', '', t)
-    x = ''
-    e = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    r = 0
-    u = 0
-    for c in range(len(t)):
-      r <<= 6
-      n = t[c]
-      i = e.find(n)
-      if i >= 0:
-        r |= i
-      u += 6
-      if u == 24:
-        x += chr((16711680 & r) >> 16)
-        x += chr((65280 & r) >> 8)
-        x += chr(255 & r)
-        r = 0
-        u = 0
-
-    if u == 12:
-      r >>= 4
-      x += chr(r)
-      return x
-    elif u == 18:
-      r >>= 2
-      x += chr((65280 & r) >> 8)
-      x += chr(255 & r)
-      return x
-    else:
-      return x
-
-  def html_link(self, t, n):
-    o = 256
-    u = 0
-    c = ''
-    r = [i for i in range(o)]
-    for e in range(o):
-      u = (u + r[e] + ord(t[e % len(t)])) % o
-      r[e], r[u] = r[u], r[e]
-
-    u = 0
-    e = 0
-    for s in range(len(n)):
-      e = (e + 1) % o
-      u = (u + r[e]) % o
-      r[e], r[u] = r[u], r[e]
-      ord(n[s])
-      c += chr(ord(n[s]) ^ r[(r[e] + r[u]) % o])
-    return c
-
-  def get(self):
-    part1 = self.hash[0:9]
-    part2 = self.generate_part2(self.hash[9:])
-    return self.html_link(part1, part2)
-
-class Downloader():
-
-  def __init__(self, base_path, name_prefix, start, episode_count, save_dir: Path, downloader):
-    self.base_path = base_path
-    self.filename_prefix = name_prefix
-    self.start_episode = start - 1
-    self.get_episodes = episode_count
-    self.save_dir = save_dir
-    self.request = Request9anime(base_path)
-    self.downloader = downloader
-    self.anime_html_filepath = os.path.join(CUR_DIR, '%s-python.html' % self.filename_prefix)
-    self.subscribers = []
-
-  def store_cookies(self):
-    paths = [self.base_path]
-    for path in paths:
-      res_meta_data = self.request.res_headers(path)
-      cookies = Downloader.get_cookies(res_meta_data)
-      for key in cookies:
-        self.request.save_cookie(key, cookies[key])
-
-  @staticmethod
-  def get_cookies(res_headers):
-    cookie_headers = [val for header, val in res_headers if header == 'set-cookie']
-    cookies = {}
-    for cookie_str in cookie_headers:
-      key, val = cookie_str.split(';', 1)[0].strip().split('=', 1)
-      cookies[key] = val
-    return cookies
-
-  def add_subscriber(self, subscriber):
-    self.subscribers.append(subscriber)
-
-  def notify_downlaod(self, path):
-    for subscriber in self.subscribers:
-      subscriber.notify(path)
-
-
-  def get_episodes_html(self):
-    path_matched = re.search(r".*\.(\w+)\/(\w+)", self.base_path)
-    servers_id = path_matched.group(1)
-    episode_id = path_matched.group(2)
-    episode_url = EPISODES_URL
-    content = self.request.get(episode_url, {'id': servers_id, 'episode': episode_id})
-
-    try:
-      html_episodes = content
-      path = self.anime_html_filepath
-      with open(path, 'w') as html_text:
-        html_text.write(html_episodes)
-    except Exception as e:
-      logging.debug("content:\n%s", content)
-      raise e
-
-  def get_episode_ids(self):
-    path = self.anime_html_filepath
-    with open(path, 'r') as fp:
-      html = fp.read()
-    parser = EpisodeDataId(html, SERVER)
-    return parser.get_episode_ids()
-
-  def download_videos(self, episode_ids, mode):
-    # get video source html page
-    start = self.start_episode
-    get_episodes = self.get_episodes
-    anime_ep_ids = episode_ids[start: start + get_episodes]
-    source_info_path = EPISODE_INFO
-    logging.debug('headers:\n%s', self.request.headers)
-    for i in range(get_episodes):
-      current_ep = start + i + 1
-      logging.debug("Episode %s data-id=%s", current_ep, anime_ep_ids[i])
-      # sensitive code
-      content = self.request.get(source_info_path, {
-          'id': anime_ep_ids[i]})
-      try:
-        source_html_url = VideoHtmlGenerator(json.loads(content)['url']).get()
-        logging.info(f'Downloading episode {current_ep}')
-      except Exception:
-        logging.exception(f'source_info_url response:\n{content}')
-        return
-
-      
-      source_html_path = os.path.join(CUR_DIR, '%s-source-ep%s.html' % (
-          self.filename_prefix, current_ep))
-      save_as = os.path.join(self.save_dir, '%s%s.mp4' % (self.filename_prefix, current_ep))
-      returncode = self.downloader.download(source_html_url, save_as, source_html_path, mode)
-      if not returncode:
-        os.remove(source_html_path)
-        self.notify_downlaod(save_as)
-
-
-  # temp funciton
-  def episodes_json_to_html(self):
-    read_path = os.path.join(os.path.join(CUR_DIR, 'sample', 'episodes'), '%s.json' % self.filename_prefix)
-    with open(read_path, 'r') as fp:
-      ep_json = json.loads(fp.read())
-
-    try:
-      html_episodes = ep_json['html']
-    except Exception as err:
-      logging.info('ep_json=%s', ep_json)
-      raise err
-
-    path = self.anime_html_filepath
-    with open(path, 'w') as html_text:
-      html_text.write(html_episodes)
-
-  def download(self, mode):
-    self.store_cookies()
-    #  @FIXME need to mimic recaptcha_en.js to send token param to EPISODES_URL.
-    # devtools from chrome doesn't even return the correct result for EPISODES_URL. Use Firefox.
-    # self.get_episodes_html()
-    self.episodes_json_to_html()
-
-    episode_ids = self.get_episode_ids()
-    self.download_videos(episode_ids, mode)
-    os.remove(self.anime_html_filepath)
-
-if __name__ == "__main__":
+def main():
   CUR_DIR = os.path.dirname(__file__)
   with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
     config = json.load(config_fp)
-  BASE_PATH = config['base_path']
+  episodes_count = config['get_episodes']
   download_from = StreamtapeDownloader() # Mp4uploadDownloader()
-  SERVER = download_from.server_id
-  EPISODES_URL = '/ajax/anime/servers'
-  EPISODE_INFO = '/ajax/anime/episode'
+  server_id = download_from.server_id
   save_at = Path(config['save_in'])
   download_mode = DownloadMode.FOREGROUND if sys.stdout.isatty() else DownloadMode.BACKGROUND
 
-  downloader = Downloader(
-      BASE_PATH, config['filename_prefix'], config['start_episode'], config['get_episodes'],
-      save_at, download_from
+  nine_anime = NineAnime(
+      config['base_path'], config['filename_prefix'], config['start_episode'], episodes_count
   )
+  nine_anime.update_videolinks(server_id)
+  print(nine_anime.get_cached_links())
 
-  if config.get('upload_to'):
-    drive_id = str(config['upload_to'])
-    uploader = GdriveUploader(4242, drive_id)
-    downloader.add_subscriber(uploader)
 
-  downloader.download(download_mode)
+  # if config.get('upload_to'):
+  #   drive_id = str(config['upload_to'])
+  #   uploader = GdriveUploader(4242, drive_id)
+  #   downloader.add_subscriber(uploader)
+
+
+if __name__ == "__main__":
+  main()
