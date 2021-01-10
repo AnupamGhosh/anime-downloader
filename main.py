@@ -33,7 +33,8 @@ def main():
       config['base_path'], config['filename_prefix'], config['start_episode'], episodes_count
   )
   nine_anime.update_videolinks(server_id)
-  print(nine_anime.get_cached_links())
+  videolinks = nine_anime.get_cached_links()
+
 
 
   # if config.get('upload_to'):
