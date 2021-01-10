@@ -14,6 +14,7 @@ class Downloader:
     self.referer = f'Referer: {Request9anime.DOMAIN}'
     self.source_req_header = {}
     self.cache_dir = cache_dir
+    self.subscribers = []
 
   def store_source_html(self, html, html_name, episode_url):
     save_at = PurePath(self.cache_dir).joinpath(f'{html_name}.html')
@@ -29,13 +30,25 @@ class Downloader:
   def get_source_html(self, target):
     return Request(self.source_req_header).get(target)
 
+  def add_subscriber(self, subscriber):
+    self.subscribers.append(subscriber)
+
+  def notify_downlaod(self, path):
+    for subscriber in self.subscribers:
+      subscriber.notify(path)
+
   def download(self, target_url, save_loc, mode):
     logging.debug("Source html url: %s", target_url)
     source_html = self.get_source_html(target_url)
     html_name = PurePath(save_loc).name
     self.store_source_html(source_html, html_name, target_url)
     link = self.parse_link(source_html)
-    return self.fetch(link, f'{save_loc}.mp4', mode)
+    path = f'{save_loc}.mp4'
+    returncode = self.fetch(link, path, mode)
+    
+    if returncode == 0:
+      self.notify_downlaod(path)
+    return returncode
 
   def fetch(self, download_link, save_loc, mode):
     logging.debug("Download link: %s", download_link)

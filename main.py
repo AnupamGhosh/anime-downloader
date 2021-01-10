@@ -6,18 +6,15 @@
 
 import json
 import os
-import re
 import sys
 from pathlib import Path
 
 import utils
 from download_command import DownloadMode
-from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
+from file_downloader import StreamtapeDownloader
 from gcloud_upload_client import GdriveUploader
 from logger import logging
-from make_request import Request, Request9anime
-from nine_anime import NineAnime, VideoURLDecoder
-from querySelector import GetElements, SearchNodeParser
+from nine_anime import NineAnime
 
 
 def main():
@@ -38,16 +35,18 @@ def main():
   nine_anime.update_videolinks(server_id)
   videolinks = nine_anime.get_cached_links()
 
+  if config.get('upload_to'):
+    drive_id = str(config['upload_to'])
+    uploader = GdriveUploader(4242, drive_id)
+    video_repo.add_subscriber(uploader)
+
   for episode, videolink in videolinks.items():
     save_loc = os.path.join(save_at, f'{filename_prefix}{episode}')
     video_repo.download(videolink, save_loc, download_mode)
 
 
 
-  # if config.get('upload_to'):
-  #   drive_id = str(config['upload_to'])
-  #   uploader = GdriveUploader(4242, drive_id)
-  #   downloader.add_subscriber(uploader)
+
 
 
 if __name__ == "__main__":
