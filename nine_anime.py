@@ -7,7 +7,9 @@
 
 import json
 import os
+import random
 import re
+import time
 from pathlib import Path
 from typing import Dict
 
@@ -96,6 +98,9 @@ class NineAnime:
         logging.exception(f'source_info_url response:\n{content}')
         return
       videolinks[current_ep] = source_html_url
+      # to avoid being blocked by spamming
+      duration = random.uniform(0.2, 1)
+      time.sleep(duration)
 
     return videolinks
       
