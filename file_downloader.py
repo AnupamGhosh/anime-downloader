@@ -1,24 +1,26 @@
 import re
-import os
+from pathlib import Path, PurePath
 
 from download_command import WgetCommand, CurlCommand
 from logger import logging
 from make_request import Request, Request9anime
 
-class Downloader():
+class Downloader:
   BACKGROUND_DOWNLOAD = 0
   FOREGROUND_DOWNLOAD = 1
 
-  def __init__(self):
+  def __init__(self, cache_dir):
     self.browser_req = f'User-Agent: {Request.USER_AGENT_BROWSER}'
     self.referer = f'Referer: {Request9anime.DOMAIN}'
     self.source_req_header = {}
+    self.cache_dir = cache_dir
 
-  def store_source_html(self, html, save_at, target):
+  def store_source_html(self, html, html_name, episode_url):
+    save_at = PurePath(self.cache_dir).joinpath(f'{html_name}.html')
     if not save_at:
       return
     with open(save_at, 'w') as source_html_file:
-      source_html_file.write('<!-- %s -->\n' % target)
+      source_html_file.write('<!-- %s -->\n' % episode_url)
       source_html_file.write(html)
 
   def parse_link(self, source):
@@ -27,12 +29,13 @@ class Downloader():
   def get_source_html(self, target):
     return Request(self.source_req_header).get(target)
 
-  def download(self, target, save_loc, source_html_path, mode):
-    logging.debug("Source html url: %s", target)
-    source_html = self.get_source_html(target)
-    self.store_source_html(source_html, source_html_path, target)
+  def download(self, target_url, save_loc, mode):
+    logging.debug("Source html url: %s", target_url)
+    source_html = self.get_source_html(target_url)
+    html_name = PurePath(save_loc).name
+    self.store_source_html(source_html, html_name, target_url)
     link = self.parse_link(source_html)
-    return self.fetch(link, save_loc, mode)
+    return self.fetch(link, f'{save_loc}.mp4', mode)
 
   def fetch(self, download_link, save_loc, mode):
     logging.debug("Download link: %s", download_link)
@@ -44,8 +47,8 @@ class Downloader():
     return returncode
 
 class Mp4uploadDownloader(Downloader):
-  def __init__(self):
-    super().__init__()
+  def __init__(self, cache_dir):
+    super().__init__(cache_dir)
     self.referer = f'Referer: https://www.mp4upload.com/'
     self.server_id = 35
 
@@ -62,8 +65,8 @@ class Mp4uploadDownloader(Downloader):
 
 
 class StreamtapeDownloader(Downloader):
-  def __init__(self):
-    super().__init__()
+  def __init__(self, cache_dir):
+    super().__init__(cache_dir)
     self.server_id = 40
     self.source_req_header = {
       'authority': 'streamtape.to',
@@ -114,5 +117,6 @@ if __name__ == "__main__":
   }
   req = Request(header)
   source = req.get(streamtape_link)
-  downloader = StreamtapeDownloader()
+  cache_dir = Path('/Users/anupamghosh/workspace/fun/anime-downloader/__pycache__')
+  downloader = StreamtapeDownloader(cache_dir)
   print(downloader.parse_link(source))

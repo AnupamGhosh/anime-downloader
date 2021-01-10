@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 from typing import Dict
 
+import utils
 from logger import logging
 from make_request import Request, Request9anime
 from querySelector import GetElements, SearchNodeParser
@@ -24,13 +25,8 @@ class NineAnime:
     return os.path.join(self.cache_directory(), 'python.html')
 
   def cache_directory(self) -> Path:
-    cache_dir = os.path.join(Path(__file__).parent, '__pycache__', self.filename_prefix)
-    path = Path(cache_dir)
-    if not path.is_dir():
-      path.mkdir()
+    return utils.get_cache_directory(self.filename_prefix)
 
-    return path
-  
   def store_cookies(self):
     paths = [self.base_path]
     for path in paths:

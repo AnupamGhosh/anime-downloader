@@ -10,6 +10,7 @@ import re
 import sys
 from pathlib import Path
 
+import utils
 from download_command import DownloadMode
 from file_downloader import Mp4uploadDownloader, StreamtapeDownloader
 from gcloud_upload_client import GdriveUploader
@@ -24,16 +25,22 @@ def main():
   with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
     config = json.load(config_fp)
   episodes_count = config['get_episodes']
-  download_from = StreamtapeDownloader() # Mp4uploadDownloader()
-  server_id = download_from.server_id
+  filename_prefix = config['filename_prefix']
+  cache_dir = utils.get_cache_directory(filename_prefix)
+  video_repo = StreamtapeDownloader(cache_dir)
+  server_id = video_repo.server_id
   save_at = Path(config['save_in'])
   download_mode = DownloadMode.FOREGROUND if sys.stdout.isatty() else DownloadMode.BACKGROUND
 
   nine_anime = NineAnime(
-      config['base_path'], config['filename_prefix'], config['start_episode'], episodes_count
+      config['base_path'], filename_prefix, config['start_episode'], episodes_count
   )
   nine_anime.update_videolinks(server_id)
   videolinks = nine_anime.get_cached_links()
+
+  for episode, videolink in videolinks.items():
+    save_loc = os.path.join(save_at, f'{filename_prefix}{episode}')
+    video_repo.download(videolink, save_loc, download_mode)
 
 
 
