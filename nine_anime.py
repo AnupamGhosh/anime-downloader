@@ -1,3 +1,10 @@
+# https://9anime.to/ajax/film/servers/yzn0 last part yzn0 can be found in the anime page url,
+# eg. for fairy-tail nqwm
+# class server and data id = 35
+# li > a.active store data-id
+# For analyzing URL params for EPISODES_URL, EPISODE_INFO open chrome devtools.
+# Check the initiator column to understand the code flow & logic how data is sent to server
+
 import json
 import os
 import re

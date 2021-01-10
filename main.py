@@ -1,9 +1,3 @@
-# https://9anime.to/ajax/film/servers/yzn0 last part yzn0 can be found in the anime page url,
-# eg. for fairy-tail nqwm
-# class server and data id = 35
-# li > a.active store data-id
-# analyze every params carefully when editing API calls
-
 import json
 import os
 import sys
@@ -43,10 +37,6 @@ def main():
   for episode, videolink in videolinks.items():
     save_loc = os.path.join(save_at, f'{filename_prefix}{episode}')
     video_repo.download(videolink, save_loc, download_mode)
-
-
-
-
 
 
 if __name__ == "__main__":

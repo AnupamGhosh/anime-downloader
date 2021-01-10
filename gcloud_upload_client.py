@@ -34,8 +34,8 @@ class GdriveUploader:
   def notify(self, path):
     self.upload(path)
     # @FIXME use interface to do this. Perform the logic of this method from caller
-    # os.remove(path)
     logging.info(f'removing {path}')
+    os.remove(path)
 
   def upload(self, path):
     payload = self.create_payload(path)
