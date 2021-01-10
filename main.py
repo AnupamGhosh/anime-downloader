@@ -215,26 +215,26 @@ class Downloader():
     self.download_videos(episode_ids, mode)
     os.remove(self.anime_html_filepath)
 
+if __name__ == "__main__":
+  CUR_DIR = os.path.dirname(__file__)
+  with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
+    config = json.load(config_fp)
+  BASE_PATH = config['base_path']
+  download_from = StreamtapeDownloader() # Mp4uploadDownloader()
+  SERVER = download_from.server_id
+  EPISODES_URL = '/ajax/anime/servers'
+  EPISODE_INFO = '/ajax/anime/episode'
+  save_at = Path(config['save_in'])
+  download_mode = DownloadMode.FOREGROUND if sys.stdout.isatty() else DownloadMode.BACKGROUND
 
-CUR_DIR = os.path.dirname(__file__)
-with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
-  config = json.load(config_fp)
-BASE_PATH = config['base_path']
-download_from = StreamtapeDownloader() # Mp4uploadDownloader()
-SERVER = download_from.server_id
-EPISODES_URL = '/ajax/anime/servers'
-EPISODE_INFO = '/ajax/anime/episode'
-save_at = Path(config['save_in'])
-download_mode = DownloadMode.FOREGROUND if sys.stdout.isatty() else DownloadMode.BACKGROUND
+  downloader = Downloader(
+      BASE_PATH, config['filename_prefix'], config['start_episode'], config['get_episodes'],
+      save_at, download_from
+  )
 
-downloader = Downloader(
-    BASE_PATH, config['filename_prefix'], config['start_episode'], config['get_episodes'],
-    save_at, download_from
-)
+  if config.get('upload_to'):
+    drive_id = str(config['upload_to'])
+    uploader = GdriveUploader(4242, drive_id)
+    downloader.add_subscriber(uploader)
 
-if config.get('upload_to'):
-  drive_id = str(config['upload_to'])
-  uploader = GdriveUploader(4242, drive_id)
-  downloader.add_subscriber(uploader)
-
-downloader.download(download_mode)
+  downloader.download(download_mode)
