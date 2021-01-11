@@ -76,7 +76,7 @@ class NineAnime:
     parser = EpisodeDataId(html, server_id)
     return parser.get_episode_ids()
 
-  def get_videolinks(self, episode_ids) -> Dict[int, str]:
+  def get_videolinks(self, episode_ids: [str]) -> Dict[int, str]:
     # get video source html page
     start = self.start_episode
     get_episodes = self.get_episodes
@@ -87,10 +87,15 @@ class NineAnime:
     videolinks = {}
     for i in range(get_episodes):
       current_ep = start + i + 1
-      logging.debug("Episode %s data-id=%s", current_ep, anime_ep_ids[i])
+      episode_hash = anime_ep_ids[i]
+      if not episode_hash:
+        logging.info(f'Hash not found for episode {current_ep}! Skipping.')
+        continue
+
+      logging.debug("Episode %s data-id=%s", current_ep, episode_hash)
       # sensitive code
       content = self.request.get(source_info_path, {
-          'id': anime_ep_ids[i]})
+          'id': episode_hash})
       try:
         source_html_url = url_decoder.get(json.loads(content)['url'])
         logging.info(f'Downloading episode {current_ep}')
