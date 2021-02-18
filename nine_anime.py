@@ -98,7 +98,7 @@ class NineAnime:
           'id': episode_hash})
       try:
         source_html_url = url_decoder.get(json.loads(content)['url'])
-        logging.info(f'Downloading episode {current_ep}')
+        logging.info(f'Link for episode {current_ep}')
       except Exception:
         logging.exception(f'source_info_url response:\n{content}')
         return

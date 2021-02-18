@@ -56,7 +56,7 @@ class Request(object):
     return self.make_request(url, params).getheaders()
 
 class Request9anime(Request):
-  DOMAIN = 'https://9anime.app'
+  DOMAIN = 'https://9anime.at'
 
   def __init__(self, base_path):
     super(Request9anime, self).__init__({

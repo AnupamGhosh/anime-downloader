@@ -5,7 +5,7 @@ from pathlib import Path
 
 import utils
 from download_command import DownloadMode
-from file_downloader import StreamtapeDownloader
+from file_downloader import StreamtapeDownloader, Mp4uploadDownloader
 from gcloud_upload_client import GdriveUploader
 from logger import logging
 from nine_anime import NineAnime
@@ -20,7 +20,8 @@ def main():
   last_episode = start_episode + episodes_count - 1
   filename_prefix = config['filename_prefix']
   cache_dir = utils.get_cache_directory(filename_prefix)
-  video_repo = StreamtapeDownloader(cache_dir)
+  # video_repo = StreamtapeDownloader(cache_dir)
+  video_repo = Mp4uploadDownloader(cache_dir)
   server_id = video_repo.server_id
   save_at = Path(config['save_in'])
   download_mode = DownloadMode.FOREGROUND if sys.stdout.isatty() else DownloadMode.BACKGROUND
@@ -37,7 +38,7 @@ def main():
     video_repo.add_subscriber(uploader)
 
   for episode in range(start_episode, last_episode + 1):
-    videolink = videolinks.get(episode)
+    videolink = videolinks.get(str(episode))
     if not videolink:
       logging.info(f'videolink unavailable for episode {episode}. Skipping.')
       continue

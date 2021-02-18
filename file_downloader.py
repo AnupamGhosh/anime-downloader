@@ -47,7 +47,6 @@ class Downloader:
     returncode = self.fetch(link, path, mode)
     
     if returncode == 0:
-      Path(save_loc).unlink()
       self.notify_downlaod(path)
     return returncode
 
