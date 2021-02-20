@@ -22,11 +22,9 @@ class NineAnime:
   EPISODES_URL = '/ajax/anime/servers'
   EPISODE_INFO = '/ajax/anime/episode'
 
-  def __init__(self, base_path: str, name_prefix: str, start: str, episode_count: int):
+  def __init__(self, base_path: str, name_prefix: str):
     self.base_path = base_path
     self.filename_prefix = name_prefix
-    self.start_episode = start - 1
-    self.get_episodes = episode_count
     self.request = Request9anime(base_path)
 
   def anime_html_filepath(self) -> str:
@@ -76,18 +74,13 @@ class NineAnime:
     parser = EpisodeDataId(html, server_id)
     return parser.get_episode_ids()
 
-  def get_videolinks(self, episode_ids: [str]) -> Dict[int, str]:
+  def get_videolinks(self, episode_ids: Dict[int, str]) -> Dict[int, str]:
     # get video source html page
-    start = self.start_episode
-    get_episodes = self.get_episodes
-    anime_ep_ids = episode_ids[start: start + get_episodes]
     source_info_path = NineAnime.EPISODE_INFO
     url_decoder = VideoURLDecoder()
     logging.debug('headers:\n%s', self.request.headers)
     videolinks = {}
-    for i in range(get_episodes):
-      current_ep = start + i + 1
-      episode_hash = anime_ep_ids[i]
+    for current_ep, episode_hash in episode_ids.items():
       if not episode_hash:
         logging.info(f'Hash not found for episode {current_ep}! Skipping.')
         continue
@@ -144,15 +137,21 @@ class NineAnime:
     with open(path, 'w') as html_text:
       html_text.write(html_episodes)
 
-  def update_videolinks(self, server_id):
+  def update_videolinks(self, server_id, force=False):
     self.store_cookies()
     #  @FIXME need to mimic recaptcha_en.js to send token param to EPISODES_URL.
     # devtools from chrome doesn't even return the correct result for EPISODES_URL. Use Firefox.
     # self.get_episodes_html()
     self.episodes_json_to_html()
-
     episode_ids = self.get_episode_ids(server_id)
-    videolinks = self.get_videolinks(episode_ids)
+
+    cached_links = self.get_cached_links() if not force else {}
+    need_episodes = {k: v for k, v in episode_ids.items() if not cached_links.get(str(k))}
+
+    if not need_episodes:
+      return
+
+    videolinks = self.get_videolinks(need_episodes)
     self.cache_videolinks(videolinks)
     # os.remove(self.anime_html_filepath())
 
@@ -171,10 +170,10 @@ class EpisodeDataId:
 
   def get_episode_ids(self):
     elements = self.query.matched_elements()
-    episode_ids = [''] * int(elements[-1]['data-base'])
+    episode_ids = {}
     for element in elements:
       episode_no = int(element['data-base'])
-      episode_ids[episode_no - 1] = json.loads(element['data-sources'])[self.server_id]
+      episode_ids[episode_no] = json.loads(element['data-sources'])[self.server_id]
     return episode_ids
 
 class VideoURLDecoder:

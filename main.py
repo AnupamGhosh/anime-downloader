@@ -26,9 +26,7 @@ def main():
   save_at = Path(config['save_in'])
   download_mode = DownloadMode.FOREGROUND if sys.stdout.isatty() else DownloadMode.BACKGROUND
 
-  nine_anime = NineAnime(
-      config['base_path'], filename_prefix, start_episode, episodes_count
-  )
+  nine_anime = NineAnime(config['base_path'], filename_prefix)
   nine_anime.update_videolinks(server_id)
   videolinks = nine_anime.get_cached_links()
 
