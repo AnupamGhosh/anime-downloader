@@ -15,9 +15,12 @@ def main():
   CUR_DIR = os.path.dirname(__file__)
   with open(os.path.join(CUR_DIR, 'config.json'), 'r') as config_fp:
     config = json.load(config_fp)
-  episodes_count = config['get_episodes']
   start_episode = config['start_episode']
-  last_episode = start_episode + episodes_count - 1
+  last_episode = config.get('end_episode')
+  if not last_episode:
+    episodes_count = config['get_episodes']
+    last_episode = start_episode + episodes_count - 1
+
   filename_prefix = config['filename_prefix']
   cache_dir = utils.get_cache_directory(filename_prefix)
   # video_repo = StreamtapeDownloader(cache_dir)
