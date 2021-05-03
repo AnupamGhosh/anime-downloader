@@ -1,7 +1,7 @@
 {
     "base_path": "",
-    "filename_prefix": "",
+    "filename_prefix": "tsukigakirei",
     "start_episode": 1,
-    "get_episodes": 2,
-    "save_in": "/"
+    "get_episodes": 12,
+    "save_in": "~/Movies/Tsukigakirei/"
 }

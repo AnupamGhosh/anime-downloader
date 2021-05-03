@@ -7,7 +7,7 @@ from logger import logging
 class DownloadCommand:
   def __init__(self, url: str, save_loc: str, headers: [str]) -> None:
     self.url = url
-    self.loc = save_loc
+    self.loc = os.path.expanduser(save_loc)
     self.headers = headers
 
   def run_foreground(self):

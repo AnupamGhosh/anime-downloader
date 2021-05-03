@@ -35,21 +35,20 @@ class NineAnime:
     return utils.get_cache_directory(self.filename_prefix)
 
   def store_cookies(self):
-    paths = [self.base_path]
-    for path in paths:
-      res_meta_data = self.request.res_headers(path)
-      cookies = NineAnime.get_cookies(res_meta_data)
-      for key in cookies:
-        self.request.save_cookie(key, cookies[key])
+    name, cookie = self.waf_cookie()
+    self.request.save_cookie(name, cookie)
 
-  @staticmethod
-  def get_cookies(res_headers) -> Dict[str, str]:
-    cookie_headers = [val for header, val in res_headers if header == 'set-cookie']
-    cookies = {}
-    for cookie_str in cookie_headers:
-      key, val = cookie_str.split(';', 1)[0].strip().split('=', 1)
-      cookies[key] = val
-    return cookies
+  def waf_cookie(self) -> (str, str):
+    res = self.request.get(self.base_path)
+    match = re.search(r"fromCharCode[^\d]+(\d+)", res)
+    hash_val = match[1]
+    waf_cookie = ''
+    for i in range(len(hash_val) // 2):
+      integer = int(hash_val[i * 2: (i + 1) * 2], 16)
+      ascii = chr(integer)
+      waf_cookie += ascii
+
+    return 'waf_cv', waf_cookie
 
   def get_episodes_html(self):
     path_matched = re.search(r".*\.(\w+)\/(\w+)", self.base_path)

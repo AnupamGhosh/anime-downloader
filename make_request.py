@@ -41,7 +41,7 @@ class Request(object):
     con = HTTPSConnection(domain)
     logging.debug("Requesting url: https://%s%s", domain, path)
     headers = self.headers.copy()
-    # headers['cookie'] = '; '.join(self.cookies)
+    headers['cookie'] = '; '.join(self.cookies)
     con.request('GET', path, None, headers)
     res = con.getresponse()
     self._res_text = res.read().decode('utf-8')
@@ -56,7 +56,7 @@ class Request(object):
     return self.make_request(url, params).getheaders()
 
 class Request9anime(Request):
-  DOMAIN = 'https://9anime.at'
+  DOMAIN = 'https://9anime.app'
 
   def __init__(self, base_path):
     super(Request9anime, self).__init__({
