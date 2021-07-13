@@ -10,12 +10,14 @@ else
   echo 'Filename Prefix not found'
 fi
 
-if [[ ! -f "./$file_prefix/episodes.json" ]]; then
-  cd __pycache__
+if [[ ! -f "./__pycache__/$file_prefix/episodes.json" ]]; then
+  pushd __pycache__ > /dev/null
   mkdir $file_prefix
   touch $file_prefix/episodes.json
   echo 'Copy response to episodes.json and start again'
+  popd > /dev/null
   exit 0
 fi
 
+python3 main.py
 popd > /dev/null

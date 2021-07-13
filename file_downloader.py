@@ -1,5 +1,5 @@
 import re
-from pathlib import Path, PurePath
+from pathlib import Path
 
 from download_command import WgetCommand, CurlCommand
 from logger import logging
@@ -16,8 +16,11 @@ class Downloader:
     self.cache_dir = cache_dir
     self.subscribers = []
 
+  def vid_html_local(self, html_name) -> Path:
+    return Path(self.cache_dir).joinpath(f'{html_name}.html')
+
   def store_source_html(self, html, html_name, episode_url):
-    save_at = PurePath(self.cache_dir).joinpath(f'{html_name}.html')
+    save_at = self.vid_html_local(html_name)
     if not save_at:
       return
     with open(save_at, 'w') as source_html_file:
@@ -40,13 +43,14 @@ class Downloader:
   def download(self, target_url, save_loc, mode):
     logging.debug("Source html url: %s", target_url)
     source_html = self.get_source_html(target_url)
-    html_name = PurePath(save_loc).name
+    html_name = Path(save_loc).name
     self.store_source_html(source_html, html_name, target_url)
     link = self.parse_link(source_html)
     path = f'{save_loc}.mp4'
     returncode = self.fetch(link, path, mode)
     
     if returncode == 0:
+      self.vid_html_local(html_name).unlink()
       self.notify_downlaod(path)
     return returncode
 
