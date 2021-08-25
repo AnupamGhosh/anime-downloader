@@ -38,6 +38,7 @@ class NineAnime:
     name, cookie = self.waf_cookie()
     self.request.save_cookie(name, cookie)
 
+# _ga=GA1.2.1402808237.1625303531; BB_plg=pm; waf_cv=954cbd057fdd618c0560414a10856d66; share=1; _gid=GA1.2.1792712048.1629826973; session=920f690668a7610a2f3c539c70a8f12b5898d4fc; direct_ads=1; _gat=1; __atuvc=22|30,51|31,62|32,13|33,64|34; __atuvs=6125c3502f93a046005
   def waf_cookie(self) -> (str, str):
     res = self.request.get(self.base_path)
     match = re.search(r"fromCharCode[^\d]+(\d+)", res)
@@ -176,58 +177,58 @@ class EpisodeDataId:
     return episode_ids
 
 class VideoURLDecoder:
+  def __init__(self):
+    self.Key = 'eST4kCjadnvlAm5b1BOGyLJzrE90Q6oKgRfhV+M8NDYtcxW3IP/qp2i7XHuwZFUs'
+
   def generate_part2(self, t):
     t = re.sub(r'==?$', '', t)
-    x = ''
-    e = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-    r = 0
-    u = 0
-    for c in range(len(t)):
-      r <<= 6
-      n = t[c]
-      i = e.find(n)
-      if i >= 0:
-        r |= i
-      u += 6
-      if u == 24:
-        x += chr((16711680 & r) >> 16)
-        x += chr((65280 & r) >> 8)
-        x += chr(255 & r)
-        r = 0
-        u = 0
-
-    if u == 12:
-      r >>= 4
-      x += chr(r)
-      return x
-    elif u == 18:
-      r >>= 2
-      x += chr((65280 & r) >> 8)
-      x += chr(255 & r)
-      return x
-    else:
-      return x
-
-  def html_link(self, t, n):
-    o = 256
-    u = 0
-    c = ''
-    r = [i for i in range(o)]
-    for e in range(o):
-      u = (u + r[e] + ord(t[e % len(t)])) % o
-      r[e], r[u] = r[u], r[e]
-
     u = 0
     e = 0
-    for s in range(len(n)):
-      e = (e + 1) % o
-      u = (u + r[e]) % o
-      r[e], r[u] = r[u], r[e]
-      ord(n[s])
-      c += chr(ord(n[s]) ^ r[(r[e] + r[u]) % o])
-    return c
+    x = ''
+    for c in t:
+        u <<= 6
+        r = self.Key.find(c)
+        u |= r
+        e += 6
+        if e == 24:
+            x += chr((16711680 & u) >> 16)
+            x += chr((65280 & u) >> 8)
+            x += chr(255 & u)
+            u = 0
+            e = 0
+
+    if e == 12:
+        u >>= 4
+        x += chr(u)
+    elif e == 18:
+        u >>= 2
+        x += chr((65280 & u) >> 8)
+        x += chr(255 & u)
+
+    return x
+
+  def html_link(self, t, n):
+    C = 256
+    u = 0
+    x = list(range(C))
+    for i in range(C):
+        u = (u + x[i] + ord(t[i % len(t)])) % C
+        x[i], x[u] = x[u], x[i]
+
+
+    o = 0
+    u = 0
+    e = ''
+    for i in range(len(n)):
+        o = (o + i) % C
+        u = (u + x[o]) % C
+        x[o], x[u] = x[u], x[o]
+        e += chr(ord(n[i]) ^ x[(x[o] + x[u]) % C])
+
+    assert e.startswith('http')
+    return e
 
   def get(self, hash):
-    part1 = hash[0:9]
-    part2 = self.generate_part2(hash[9:])
+    part1 = hash[0:16]
+    part2 = self.generate_part2(hash[16:])
     return self.html_link(part1, part2)
