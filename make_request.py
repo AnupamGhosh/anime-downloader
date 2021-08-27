@@ -39,9 +39,9 @@ class Request(object):
       path += '?' + urllib.parse.urlencode(params)
 
     con = HTTPSConnection(domain)
-    logging.debug("Requesting url: https://%s%s", domain, path)
     headers = self.headers.copy()
     headers['cookie'] = '; '.join(self.cookies)
+    logging.debug("Requesting url: https://%s%s, headers:%s", domain, path, headers)
     con.request('GET', path, None, headers)
     res = con.getresponse()
     self._res_text = res.read().decode('utf-8')

@@ -178,7 +178,7 @@ class EpisodeDataId:
 
 class VideoURLDecoder:
   def __init__(self):
-    self.Key = 'eST4kCjadnvlAm5b1BOGyLJzrE90Q6oKgRfhV+M8NDYtcxW3IP/qp2i7XHuwZFUs'
+    self.Key = 'CpzSkaYEbo7JW3eDjRr5ls2/tQBFivHdAcI+UPGf48qwu16xngVOKmMLZTN0hXy9'
 
   def generate_part2(self, t):
     t = re.sub(r'==?$', '', t)

@@ -52,7 +52,8 @@ class CurlCommand(DownloadCommand):
 
   def __str__(self):
     headers = ' '.join(map(lambda h: f"-H '{h}'", self.headers))
-    cmd = f"curl -k {self.url} {headers} -o '{self.loc}'"
+    retry = '--retry 42 --retry-delay 2 --retry-max-time 300'
+    cmd = f"curl -k {retry} {self.url} {headers} -o '{self.loc}'"
     return cmd
 
 
