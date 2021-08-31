@@ -1,4 +1,5 @@
 import urllib
+import urllib.request
 import re
 import time
 from http.client import HTTPSConnection
@@ -21,42 +22,33 @@ class Request(object):
     }
     self.headers.update(headers)
     self.cookies = []
-    self._res_text = ''
     
   def save_cookie(self, key, value):
     self.cookies.append('%s=%s' % (key, value))
 
   def make_request(self, url, params):
-    params = params or {}
-    reg_match = re.match(r"https:\/\/([^\/]*)([^?]*)\??(.*)", url)
-    domain = reg_match.group(1)
-    path = reg_match.group(2)
-    temp_params = reg_match.group(3)
-    if len(temp_params) > 1:
-      temp_params = re.findall(r"([^=]+)=([^&]+)&", temp_params + '&')
-      params.update({key: val for key, val in temp_params})
-    if len(params):
-      path += '?' + urllib.parse.urlencode(params)
 
-    con = HTTPSConnection(domain)
+    req_params = f'?{urllib.parse.urlencode(params)}' if params else ''
+    url = f'{url}{req_params}'
     headers = self.headers.copy()
     headers['cookie'] = '; '.join(self.cookies)
-    logging.debug("Requesting url: https://%s%s, headers:%s", domain, path, headers)
-    con.request('GET', path, None, headers)
-    res = con.getresponse()
-    self._res_text = res.read().decode('utf-8')
-    con.close()
+    logging.debug("Requesting url: %s, headers:%s", url, headers)
+    request = urllib.request.Request(url, headers=headers)
+    res = urllib.request.urlopen(request)
     return res
 
   def get(self, url, params=None):
-    self.make_request(url, params)
-    return self._res_text
+    response = self.make_request(url, params)
+    with response as fp:
+      content = fp.read().decode(encoding='UTF-8', errors='strict')
+    return content
 
   def res_headers(self, url, params=None):
-    return self.make_request(url, params).getheaders()
+    headers = self.make_request(url, params).headers
+    return dict(headers.items())
 
 class Request9anime(Request):
-  DOMAIN = 'https://9anime.pw'
+  DOMAIN = 'https://9anime.to'
 
   def __init__(self, base_path):
     super(Request9anime, self).__init__({

@@ -38,7 +38,6 @@ class NineAnime:
     name, cookie = self.waf_cookie()
     self.request.save_cookie(name, cookie)
 
-# _ga=GA1.2.1402808237.1625303531; BB_plg=pm; waf_cv=954cbd057fdd618c0560414a10856d66; share=1; _gid=GA1.2.1792712048.1629826973; session=920f690668a7610a2f3c539c70a8f12b5898d4fc; direct_ads=1; _gat=1; __atuvc=22|30,51|31,62|32,13|33,64|34; __atuvs=6125c3502f93a046005
   def waf_cookie(self) -> (str, str):
     res = self.request.get(self.base_path)
     match = re.search(r"fromCharCode[^\d]+(\d+)", res)
@@ -138,7 +137,7 @@ class NineAnime:
       html_text.write(html_episodes)
 
   def update_videolinks(self, server_id, force=False):
-    self.store_cookies()
+    # self.store_cookies()
     #  @FIXME need to mimic recaptcha_en.js to send token param to EPISODES_URL.
     # devtools from chrome doesn't even return the correct result for EPISODES_URL. Use Firefox.
     # self.get_episodes_html()
@@ -178,7 +177,7 @@ class EpisodeDataId:
 
 class VideoURLDecoder:
   def __init__(self):
-    self.Key = 'CpzSkaYEbo7JW3eDjRr5ls2/tQBFivHdAcI+UPGf48qwu16xngVOKmMLZTN0hXy9'
+    self.Key = '0wMrYU+ixjJ4QdzgfN2HlyIVAt3sBOZnCT9Lm7uFDovkb/EaKpRWhqXS5168ePcG'
 
   def generate_part2(self, t):
     t = re.sub(r'==?$', '', t)
