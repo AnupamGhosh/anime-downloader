@@ -1,8 +1,5 @@
 import urllib
 import urllib.request
-import re
-import time
-from http.client import HTTPSConnection
 
 from logger import logging
 
@@ -27,7 +24,6 @@ class Request(object):
     self.cookies.append('%s=%s' % (key, value))
 
   def make_request(self, url, params):
-
     req_params = f'?{urllib.parse.urlencode(params)}' if params else ''
     url = f'{url}{req_params}'
     headers = self.headers.copy()
@@ -44,8 +40,8 @@ class Request(object):
     return content
 
   def res_headers(self, url, params=None):
-    headers = self.make_request(url, params).headers
-    return dict(headers.items())
+    response = self.make_request(url, params)
+    return response.getheaders()
 
 class Request9anime(Request):
   DOMAIN = 'https://9anime.to'

@@ -1,3 +1,4 @@
+import asyncio
 import re
 from pathlib import Path
 
@@ -100,28 +101,35 @@ class StreamtapeDownloader(Downloader):
   def downloadlink_from_html(self, source):
     match = re.search(r"v.{0,9}ink.+innerHTML[^\"']+([^;]+)", source)
     address_str = match.group(1)
-    address = eval(address_str)
+    address = asyncio.run(execute_js_statement(address_str))
     link = f'https:{address}'
+    logging.debug(link)
     return link
 
   def parse_link(self, source):
     download_link = self.downloadlink_from_html(source)
-    res_headers = Request().res_headers(download_link)
-    redirect_url = None
-    for header, val in res_headers:
-      if header.lower() in ['x-redirect', 'location']:
-        redirect_url = val
-    if redirect_url is None:
-      raise ValueError(f'StreamtapeDownloader: Redirect url is None for {download_link}')
-    elif 'streamtape_do_not_delete' in redirect_url:
-      raise ValueError(f'StreamtapeDownloader: Download link {download_link} incorrect!')
-    return redirect_url
+    response = Request().make_request(download_link, '')
+    return response.url
 
+async def execute_js_statement(statement):
+  s = re.sub(r'"', '\\"', statement)
+  cmd = f'node -e "console.log({s})"'
+  process = await asyncio.create_subprocess_shell(
+    cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+  )
+  stdout, stderr = await process.communicate()
+  if stderr:
+    msg = stderr.decode()
+    logging.error(f'{statement} statement failed with {msg}')
+    raise Exception(msg)
+
+  return stdout.decode()
 
 if __name__ == "__main__":
+  import logging
   logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
 
-  streamtape_link = 'https://streamtape.com/e/AQ07A7Zeg1FXdLX/?site=9anime.app'
+  streamtape_link = 'https://streamtape.com/e/zD2kVwx0y3IYR1e/'
   header = {
     'authority': 'streamtape.to',
     'cache-control': 'max-age=0',
