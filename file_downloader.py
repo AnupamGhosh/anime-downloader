@@ -73,7 +73,7 @@ class Mp4uploadDownloader(Downloader):
   def parse_link(self, source):
     video_info_match = re.search(r'.*eval.*\'(.*)\'\.split.*', source)
     url_info = video_info_match.group(1).split('|')
-    url_regex = re.compile(r'(\w{1,2})://(\w{1,2})\.(\w{1,2})\.(\w{1,2}):(\w{1,2})/(\w{1,2})/(\w{1,2})/(\w{1,2})\.(\w{1,2})')
+    url_regex = re.compile(r'(\w{1,2})://(\w{1,2})\.(\w{1,2})\.(\w{1,2}):(\w{1,2})/(\w{1,2})/(\w{1,2})/-?(\w{1,2})\.(\w{1,2})')
     url_parts = [url_info[int(match, 36)] for match in url_regex.findall(source)[0]]
     download_link = '{protocol}://{subdomain}.{SLD}.{TLD}:{port}/d/{dir}/{filename}.{ext}'.format(
       protocol=url_parts[0], subdomain=url_parts[1], SLD=url_parts[2], TLD=url_parts[3], port=url_parts[4],
@@ -129,19 +129,10 @@ if __name__ == "__main__":
   import logging
   logging.basicConfig(format='%(funcName)s:%(lineno)d %(levelname)s %(message)s', level=logging.DEBUG)
 
-  streamtape_link = 'https://streamtape.com/e/zD2kVwx0y3IYR1e/'
-  header = {
-    'authority': 'streamtape.to',
-    'cache-control': 'max-age=0',
-    'upgrade-insecure-requests': '1',
-    'sec-fetch-site': 'none',
-    'sec-fetch-mode': 'navigate',
-    'sec-fetch-user': '?1',
-    'sec-fetch-dest': 'document',
-    'accept-language': 'en-GB,en;q=0.9',
-  }
-  req = Request(header)
-  source = req.get(streamtape_link)
-  cache_dir = Path('/Users/anupamghosh/workspace/fun/anime-downloader/__pycache__')
-  downloader = StreamtapeDownloader(cache_dir)
+  CUR_DIR = Path(__file__).parent
+  html_path = CUR_DIR.joinpath("__pycache__/fruits/fruits4.html")
+  with open(html_path, 'r') as fp:
+    source = fp.read()
+  cache_dir = CUR_DIR.joinpath('__pycache__')
+  downloader = Mp4uploadDownloader(cache_dir)
   print(downloader.parse_link(source))

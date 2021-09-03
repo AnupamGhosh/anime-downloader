@@ -23,8 +23,11 @@ def main():
 
   filename_prefix = config['filename_prefix']
   cache_dir = utils.get_cache_directory(filename_prefix)
-  # video_repo = StreamtapeDownloader(cache_dir)
-  video_repo = Mp4uploadDownloader(cache_dir)
+  download_from = config.get('download_from')
+  VideoDownloader = Mp4uploadDownloader
+  if download_from == 'streamtape':
+    VideoDownloader = StreamtapeDownloader
+  video_repo = VideoDownloader(cache_dir)
   server_id = video_repo.server_id
   save_at = Path(config['save_in'])
   download_mode = DownloadMode.FOREGROUND if sys.stdout.isatty() else DownloadMode.BACKGROUND
