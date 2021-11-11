@@ -10,12 +10,13 @@ import os
 import random
 import re
 import time
+import urllib.parse
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Tuple
 
 import utils
 from logger import logging
-from make_request import Request, Request9anime
+from make_request import Request9anime
 from querySelector import GetElements, SearchNodeParser
 
 class NineAnime:
@@ -38,7 +39,7 @@ class NineAnime:
     name, cookie = self.waf_cookie()
     self.request.save_cookie(name, cookie)
 
-  def waf_cookie(self) -> (str, str):
+  def waf_cookie(self) -> Tuple[str, str]:
     res = self.request.get(self.base_path)
     match = re.search(r"fromCharCode[^\d]+(\d+)", res)
     hash_val = match[1]
@@ -100,7 +101,7 @@ class NineAnime:
       time.sleep(duration)
 
     return videolinks
-      
+
   def cache_videolinks(self, videolinks: Dict[int, str]):
     videolinks_path = Path(os.path.join(self.cache_directory(), 'videolinks.json'))
     old_links = self.get_cached_links()
@@ -224,10 +225,20 @@ class VideoURLDecoder:
         x[o], x[u] = x[u], x[o]
         e += chr(ord(n[i]) ^ x[(x[o] + x[u]) % C])
 
-    assert e.startswith('http')
+    assert e.startswith('http'), e
     return e
 
   def get(self, hash):
-    part1 = hash[0:16]
-    part2 = self.generate_part2(hash[16:])
-    return self.html_link(part1, part2)
+    part1 = hash[0:6]
+    part2 = self.generate_part2(hash[6:])
+    url = self.html_link(part1, part2)
+    url = urllib.parse.unquote(url) 
+    return url
+
+
+if __name__ == '__main__':
+  decoder = VideoURLDecoder()
+  t = 'vanHb8wY9uwgdVYLsUd3jTSnTWCyIVezi+iqM8z4f6iim7WJW5iiIC0iAUXqwQVH4FT3AeUhVtVp'
+  print(decoder.generate_part2(t))
+  url = 'TDFex7vanHb8wY9uwgdVYLsUd3jTSnTWCyIVezi+iqM8z4f6iim7WJW5iiIC0iAUXqwQVH4FT3AeUhVtVp'
+  print(decoder.get('TDFex7vanHb8wY9uwgdVYLsUd3jTSnTWCyIVezi+iqM8z4f6iim7WJW5iiIC0iAUXqwQVH4FT3AeUhVtVp'))

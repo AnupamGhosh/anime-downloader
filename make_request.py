@@ -3,19 +3,19 @@ import urllib.request
 
 from logger import logging
 
-class Request(object):
-  USER_AGENT_BROWSER = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'
+class Request:
+  USER_AGENT_BROWSER = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:92.0) Gecko/20100101 Firefox/92.0'
   
   def __init__(self, headers=None):
     headers = headers or {}
     self.headers = {
-      'accept': 'application/json, text/javascript, */*; q=0.01',
+      'accept': '*/*',
       # 'x-requested-with': 'XMLHttpRequest',
       'user-agent': Request.USER_AGENT_BROWSER,
       'sec-fetch-site': 'same-origin',
       'sec-fetch-mode': 'cors',
       'sec-fetch-dest': 'empty',
-      'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
+      'accept-language': 'en-US,en;q=0.5',
     }
     self.headers.update(headers)
     self.cookies = []
@@ -44,7 +44,7 @@ class Request(object):
     return response.getheaders()
 
 class Request9anime(Request):
-  DOMAIN = 'https://9anime.to'
+  DOMAIN = 'https://9anime.id'
 
   def __init__(self, base_path):
     super(Request9anime, self).__init__({

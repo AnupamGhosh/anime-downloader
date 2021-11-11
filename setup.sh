@@ -2,13 +2,22 @@
 
 pushd $(dirname "$BASH_SOURCE") > /dev/null
 CONF_LOC='./config.json'
-file_prefix_line=$(grep 'filename_prefix' $CONF_LOC | head -n 1)
+# `+` was not working used `*` instead
+file_prefix=$(sed -n "s/[ ]*\"filename_prefix\":[ ]*\"\([^\"]*\)\",\{0,1\}/\1/p" $CONF_LOC | head -n 1)
+save_in=$(sed -n "s/[ ]*\"save_in\":[ ]*\"\([^\"]*\)\",\{0,1\}/\1/p" $CONF_LOC | head -n 1)
+# save_in=$(sed -n "s/[ ]*\"save_in\":[ ]*\"\([^\"]*\)\",\{0,1\}/\1/p" $CONF_LOC | head -n 1 | sed "s/ /\\\ /")
+save_in=$(sed -n "s/[ ]*\"save_in\":[ ]*\"\([^\"]*\)\",\{0,1\}/\1/p" $CONF_LOC | head -n 1 | sed "s/ /\\\ /")
 
-if [[ $file_prefix_line =~ filename_prefix.*\"([[:alnum:]]+)\" ]]; then
-  file_prefix=${BASH_REMATCH[1]}
-else
-  echo 'Filename Prefix not found'
+if [[ ! $file_prefix || ! $save_in ]]; then
+  echo "Either filename_prefix=$file_prefix save_in=$save_in is missing"
+  exit 0
 fi
+
+
+# if [[ ! -d $save_in ]]; then
+#   mkdir -p $save_in
+#   echo "Directory $save_in created"
+# fi
 
 if [[ ! -f "./__pycache__/$file_prefix/episodes.json" ]]; then
   pushd __pycache__ > /dev/null
