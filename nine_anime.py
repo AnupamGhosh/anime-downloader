@@ -178,7 +178,7 @@ class EpisodeDataId:
 
 class VideoURLDecoder:
   def __init__(self):
-    self.Key = '0wMrYU+ixjJ4QdzgfN2HlyIVAt3sBOZnCT9Lm7uFDovkb/EaKpRWhqXS5168ePcG'
+    self.Key = 'c/aUAorINHBLxWTy3uRiPt8J+vjsOheFG1E0q2X9CYwDZlnmd4Kb5M6gSVzfk7pQ'
 
   def generate_part2(self, t):
     t = re.sub(r'==?$', '', t)
@@ -186,7 +186,7 @@ class VideoURLDecoder:
     e = 0
     x = ''
     for c in t:
-        u <<= 6
+        u <<= 6 # e <<= 7813 + 2594 * 2 + 2599 * -5
         r = self.Key.find(c)
         u |= r
         e += 6
@@ -229,6 +229,7 @@ class VideoURLDecoder:
     return e
 
   def get(self, hash):
+    hash = hash.replace("\\", "") # remove \
     part1 = hash[0:6]
     part2 = self.generate_part2(hash[6:])
     url = self.html_link(part1, part2)
@@ -238,7 +239,26 @@ class VideoURLDecoder:
 
 if __name__ == '__main__':
   decoder = VideoURLDecoder()
-  t = 'vanHb8wY9uwgdVYLsUd3jTSnTWCyIVezi+iqM8z4f6iim7WJW5iiIC0iAUXqwQVH4FT3AeUhVtVp'
-  print(decoder.generate_part2(t))
-  url = 'TDFex7vanHb8wY9uwgdVYLsUd3jTSnTWCyIVezi+iqM8z4f6iim7WJW5iiIC0iAUXqwQVH4FT3AeUhVtVp'
-  print(decoder.get('TDFex7vanHb8wY9uwgdVYLsUd3jTSnTWCyIVezi+iqM8z4f6iim7WJW5iiIC0iAUXqwQVH4FT3AeUhVtVp'))
+  # t = 'vanHb8wY9uwgdVYLsUd3jTSnTWCyIVezi+iqM8z4f6iim7WJW5iiIC0iAUXqwQVH4FT3AeUhVtVp'
+  # print(decoder.generate_part2(t))
+  # url = 'TDFex7vanHb8wY9uwgdVYLsUd3jTSnTWCyIVezi+iqM8z4f6iim7WJW5iiIC0iAUXqwQVH4FT3AeUhVtVp'
+  # print(decoder.get(url))
+  # https://9anime.id/watch/my-senpai-is-annoying-dub.1nnzm
+  url = 'Dy20Y1ysKegjDYCKGJBJzvuYCi3iGKuE5D0slBSnxDqOA89nyTO8pMWlXBz/IJFaT1SPsw9l9yx3a8Df3B'
+  print(decoder.get(url))
+
+  url = 'ImbS1m17PgEWXLOJNMsvTbZNH+XFHLYF6Rg+AJee0fXHfr89bgmmy+9GOlE7bmM6xS\/yPJG20EGvyq5nji'
+  url = 'wpfJpC02fj\/KNSL45wXMpzFXnT038s2O0\/SNWNJJDgPwuqRhQufUdSbSvihI0vftPmlOcH4d5dFiGyzj6r'
+  url = 'qjApEfLtAiApTgMHkRBlWZGu4Bd6R1nUGdxbM60kxacjaHr7SzQ\/UPL4qUbp2UAQigng5dTWOc0BiojXzi'
+  url = 'wpfJpC02fj\/KNSL45wXMpzFXnT038s2O0\/SNWNJJDgPwuqRhQufUdSbSvihI0vftPmlOcH4d5dFiGyzj6r'
+  # url = '8u27oef/RW5FOSrUD1PTH2WYa8Mb0EoAYx20OAQaWWz37GPxjUqBQ03pXZt1KgXjYqWg0IyN2FFnzaDUQH'
+  print(decoder.get(url))
+
+  url = 'DYIe11DAJYitfckjGLWt8a01xUHgB7DmsHKalmo1xoSH62SZoBTMaYepKNbVq14HLfDqEfCAgcdhZITMRN'
+  print(decoder.get(url))
+
+'''
+before ajax of episode
+L: function(t, n) {
+  return new A5 // n=8d422d111457c82439b34e19cc5d1160b089f12d2f361a551db5752ffb5f650c
+'''
